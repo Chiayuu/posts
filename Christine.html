@@ -1,44 +1,138 @@
 <!DOCTYPE HTML>
-<!--
-	Strata by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
 <html>
-	<head>
-		<title>Chiayuu's Website</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-	</head>
-	<body class="is-preload">
+<head>
+  <title>Shared Cost Tracker</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <style>
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+    tfoot td { font-weight: bold; }
+    .right { text-align: right; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body class="is-preload">
+<header id="header">
+  <div class="inner">
+    <h1><strong>CHIAYU's WEBSITE</strong></h1>
+    <h1>An Engineer.</h1>
+    <h1 align="right"><a href="https://chiayuu.github.io/"> HOME ■</a></h1>
+    <h1 align="right"><a href="scloutline.html"> SCHOOL PROJECT ■</a></h1>
+    <h1 align="right"><a href="selfoutline.html"> SELF PROJECT ■</a></h1>
+    <h1 align="right"><b>SECRET PAGE ■</b></h1>
+  </div>
+</header>
 
-		<!-- Header -->
-			<header id="header">
-				<div class="inner">
-					
-					<h1><strong>CHIAYU's WEBSITE<br /></strong></h1>
-					<h1>An Engineer.<br /></h1>
-					<h1 align="right"><a href="https://chiayuu.github.io/"> HOME ■</a></h1>
-					<h1 align="right"><a>MACHINE LEARNING ■</a></h1>
-					<h1 align="right"><a href="scloutline.html"> SCHOOL PROJECT ■</a></h1>
-					<h1 align="right"><a href="selfoutline.html"> SELF PROJECT ■</a></h1>
-          <h1 align="right"><b>SECRET PAGE ■</b></h1>
-					
-				</div>
-			</header>
-		
-		<!-- Main -->
-					<div id="main">
+<div id="main">
+  <section id="one">
+    <header class="major">
+      <h2>💸 Shared Cost Tracker</h2>
+      <p>輸入日期、項目、金額，寫進 Google Sheets 並即時更新下方表格。</p>
+    </header>
 
-						<!-- One -->
-							<section id="one">
-								<header class="major">
-									<h2>欠錢仔 欠錢不還<br />
-									</h2>
-								</header>
-						
+    <!-- 表單 -->
+    <form id="entryForm">
+      <label>日期：<input type="date" id="dateInput" required></label><br>
+      <label>項目：<input type="text" id="itemInput" required></label><br>
+      <label>金額：<input type="number" id="costInput" step="0.01" required></label><br>
+      <button type="submit">➕ 新增</button>
+      <span id="msg" style="margin-left:.5rem;color:gray;"></span>
+    </form>
 
-							</section>
+    <!-- 顯示表格 -->
+    <table id="dataTable">
+      <thead>
+        <tr><th>日期</th><th>項目</th><th class="right">金額</th></tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><td colspan="2" class="right">合計：</td><td class="right" id="total">$0.00</td></tr>
+      </tfoot>
+    </table>
+    <button id="refreshBtn" style="margin-top:.5rem;">🔄 重新整理</button>
+  </section>
+</div>
 
+<script>
+/* ========== 這裡放你的 Google Form 設定 ========== */
+const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSd4fYEjOVAd4pqplNQPAVHjmNAfgHSuKATlyZjpPlLcxYlPEw/formResponse";
+
+const FORM_FIELDS = {
+  dateYear:  'entry.1832617978_year',
+  dateMonth: 'entry.1832617978_month',
+  dateDay:   'entry.1832617978_day',
+  item:      'entry.1202275953',
+  cost:      'entry.1361977771'
+  // status: 'entry.xxxxxxxx' // 如果之後加了狀態，補這裡
+};
+
+// 發佈為 CSV 的網址，記得在 Google Sheet -> 檔案 -> 分享 -> 發佈到網路，複製 CSV 連結
+const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv";
+/* ================================================= */
+
+function formatMoney(n) {
+  return isNaN(n) ? '$0.00' : '$' + n.toFixed(2);
+}
+
+async function fetchCSV() {
+  const res = await fetch(PUBLISHED_CSV_URL, { cache: 'no-store' });
+  const text = await res.text();
+  const rows = text.trim().split('\n').map(r => r.split(','));
+  return rows;
+}
+
+async function refreshTable() {
+  try {
+    const rows = await fetchCSV();
+    const tbody = document.querySelector('#dataTable tbody');
+    tbody.innerHTML = '';
+    let sum = 0;
+    rows.slice(1).forEach(r => {
+      const date = r[0], item = r[1], cost = parseFloat(r[2]);
+      if (!date && !item && isNaN(cost)) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${date}</td><td>${item}</td><td class="right">${formatMoney(cost)}</td>`;
+      tbody.appendChild(tr);
+      if (!isNaN(cost)) sum += cost;
+    });
+    document.getElementById('total').textContent = formatMoney(sum);
+  } catch (e) {
+    console.error('讀取表格失敗', e);
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', refreshTable);
+
+document.getElementById('entryForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('msg');
+  msg.textContent = '送出中...';
+
+  const d = new Date(document.getElementById('dateInput').value);
+  const fd = new FormData();
+  fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
+  fd.append(FORM_FIELDS.dateMonth, d.getMonth() + 1);
+  fd.append(FORM_FIELDS.dateDay,   d.getDate());
+  fd.append(FORM_FIELDS.item, document.getElementById('itemInput').value.trim());
+  fd.append(FORM_FIELDS.cost, document.getElementById('costInput').value.trim());
+
+  try {
+    await fetch(GOOGLE_FORM_ACTION, { method: 'POST', mode: 'no-cors', body: fd });
+    msg.textContent = '已新增！';
+    document.getElementById('itemInput').value = '';
+    document.getElementById('costInput').value = '';
+    setTimeout(refreshTable, 1200); // 稍等 Google 寫入
+    setTimeout(() => msg.textContent = '', 2000);
+  } catch (err) {
+    console.error(err);
+    msg.textContent = '送出失敗';
+  }
+});
+
+// 初始載入表格
+refreshTable();
+</script>
+</body>
 </html>
