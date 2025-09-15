@@ -55,11 +55,11 @@
   <!-- sticky toolbar with badges -->
   <div class="toolbar">
     <div class="inner2">
-      <div><b>Shared Cost Tracker</b></div>
+      <div><b>欠錢仔 欠錢不還</b></div>
       <div class="badge-group">
-        <div class="badge">OVERALL: <span id="overallValue" class="pill warn">—</span></div>
-        <div class="badge">STATUS:  <span id="statusValue"  class="pill warn">Loading…</span></div>
-        <button id="refreshBtn" class="pill" type="button">🔄 Refresh</button>
+        <div class="badge">總金額 <span id="overallValue" class="pill warn">—</span></div>
+        <div class="badge">什麼仔  <span id="statusValue"  class="pill warn">Loading…</span></div>
+        <button id="refreshBtn" class="pill" type="button">🔄重新整理</button>
       </div>
     </div>
   </div>
@@ -78,35 +78,27 @@
           <form id="entryForm">
             <div class="grid-2">
               <div>
-                <label>日期</label>
+                <label>日期📅</label>
                 <input type="date" id="dateInput" required />
               </div>
               <div>
-                <label>金額</label>
+                <label>金額💰</label>
                 <input type="number" id="costInput" step="0.01" inputmode="decimal" placeholder="例如 12.50" required />
               </div>
               <div>
-                <label>項目</label>
+                <label>項目🥐</label>
                 <input type="text" id="itemInput" placeholder="Coffee / Uber ..." required />
               </div>
             </div>
             <div style="display:flex;gap:10px;margin-top:10px">
-              <button type="submit" class="primary">➕ 新增</button>
+              <button type="submit" class="primary">➕新增</button>
               <span id="msg" class="muted" aria-live="polite"></span>
             </div>
           </form>
           <p class="muted" style="margin:.6rem 0 0">送出後 1–2 秒自動更新；若未看到新資料請按 Refresh。</p>
         </div>
 
-        <!-- right: quick overview -->
-        <div class="card">
-          <h3 style="margin-top:0">總覽</h3>
-          <div class="grid-2">
-            <div><b>合計</b><br><span id="totalAll">$0.00</span></div>
-            <div><b>可見列合計</b><br><span id="visibleSum">$0.00</span></div>
-          </div>
-        </div>
-      </div>
+
 
       <!-- table -->
       <div class="card" style="margin-top:var(--gap)">
@@ -114,12 +106,9 @@
         <div class="table-wrap">
           <table id="dataTable" role="table">
             <thead>
-              <tr><th>日期</th><th>項目</th><th class="right">金額</th></tr>
+              <tr><th>日期📅</th><th>項目🥐</th><th class="right">金額💰</th></tr>
             </thead>
             <tbody></tbody>
-            <tfoot>
-              <tr><td colspan="2" class="right">合計：</td><td class="right" id="total">$0.00</td></tr>
-            </tfoot>
           </table>
         </div>
       </div>
@@ -170,12 +159,10 @@ function renderTable(rows){
   tbody.innerHTML = '';
   let sumVisible = 0;
 
-  // 取出資料列（去掉表頭 & 空白列）
   const dataRows = rows.slice(1).filter(r =>
     r && r.some(c => String(c || '').trim() !== '')
   );
 
-  // 反轉順序：最後一列優先
   dataRows.reverse().forEach(r => {
     const date = r[1] || r[0];               // B: Date (fallback A)
     const item = r[2] || '';                 // C: Item
