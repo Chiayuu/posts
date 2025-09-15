@@ -12,8 +12,17 @@
     .card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
     .section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
     .toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
-    .toolbar .inner2{max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 18px;}
-    .pill{display:inline-block;padding:.25rem .6rem;border-radius:999px;border:1px solid #e6e6e6;font-weight:600;background:#f7f7f7}
+    .toolbar .inner2{max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 18px;flex-wrap:wrap;}
+    /* --- badge row --- */
+    .badge-group{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;}
+    .badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+    /* long rectangular bar */
+    .pill{
+      display:inline-flex;align-items:center;height:36px;
+      padding:0 14px;border-radius:10px;border:1px solid #e6e6e6;
+      background:#f7f7f7;font-weight:600;line-height:1;white-space:nowrap;
+      width:max-content;max-width:none;
+    }
     .pill.ok{background:#e9f7ef;border-color:#d4efdf}
     .pill.warn{background:#fff6e6;border-color:#ffe0a3}
     form label{display:block;margin:.5rem 0 .25rem}
@@ -35,15 +44,11 @@
   </style>
 </head>
 <body class="is-preload">
-  <!-- Header (your original) -->
+  <!-- Header -->
   <header id="header">
     <div class="inner">
       <h1><strong>CHIAYU's WEBSITE</strong></h1>
       <h1>An Engineer.</h1>
-      <h1 align="right"><a href="https://chiayuu.github.io/"> HOME ■</a></h1>
-      <h1 align="right"><a href="scloutline.html"> SCHOOL PROJECT ■</a></h1>
-      <h1 align="right"><a href="selfoutline.html"> SELF PROJECT ■</a></h1>
-      <h1 align="right"><b>SECRET PAGE ■</b></h1>
     </div>
   </header>
 
@@ -51,9 +56,9 @@
   <div class="toolbar">
     <div class="inner2">
       <div><b>Shared Cost Tracker</b></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span>OVERALL: <span id="overallValue" class="pill warn">—</span></span>
-        <span>STATUS: <span id="statusValue" class="pill warn">Loading…</span></span>
+      <div class="badge-group">
+        <div class="badge">OVERALL: <span id="overallValue" class="pill warn">—</span></div>
+        <div class="badge">STATUS:  <span id="statusValue"  class="pill warn">Loading…</span></div>
         <button id="refreshBtn" class="pill" type="button">🔄 Refresh</button>
       </div>
     </div>
@@ -62,8 +67,8 @@
   <div id="main" class="wrap">
     <section id="one">
       <header class="major">
-        <h2>💸 Shared Cost Tracker</h2>
-        <p class="muted">輸入日期、項目、金額 → 寫入 Google Sheets；下方表格與上方 OVERALL/STATUS 由試算表同步顯示。</p>
+        <h2>欠錢仔 欠錢不還</h2>
+        <p class="muted">輸入日期、項目、金額</p>
       </header>
 
       <div class="section">
@@ -84,12 +89,6 @@
                 <label>項目</label>
                 <input type="text" id="itemInput" placeholder="Coffee / Uber ..." required />
               </div>
-              <div>
-                <label class="muted">狀態（若表單未建立可略）</label>
-                <select id="statusInput" disabled>
-                  <option value="">—</option>
-                </select>
-              </div>
             </div>
             <div style="display:flex;gap:10px;margin-top:10px">
               <button type="submit" class="primary">➕ 新增</button>
@@ -103,12 +102,9 @@
         <div class="card">
           <h3 style="margin-top:0">總覽</h3>
           <div class="grid-2">
-            <div><b>合計（頁面）</b><br><span id="totalAll">$0.00</span></div>
+            <div><b>合計</b><br><span id="totalAll">$0.00</span></div>
             <div><b>可見列合計</b><br><span id="visibleSum">$0.00</span></div>
           </div>
-          <p class="muted" style="margin-top:10px">
-            OVERALL / STATUS 直接讀取分頁中的 E/F 欄（你的公式結果）。
-          </p>
         </div>
       </div>
 
@@ -141,102 +137,67 @@ const FORM_FIELDS = {
   cost:      'entry.1361977771'
   // if you add a Status field later: status: 'entry.xxxxxxxxxx'
 };
-
-// IMPORTANT: your published CSV (Form_Responses2 tab)
+// your published CSV (Form_Responses2 tab)
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqlW9LOjG7ElOjhal3gZ1v3EKiXMiml-NFSsWH_fD3efz0-G4QYNJcT2woUl1iB5f5DUGMYrzbEYOd/pub?gid=1232924297&single=true&output=csv";
-/* ============================================= */
 
 /* ==== helpers ==== */
 const $ = s => document.querySelector(s);
 const fmtMoney = n => isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
 const csvUrl = () => BASE_CSV_URL + (BASE_CSV_URL.includes('?') ? '&' : '?') + 'cb=' + Date.now();
 
-/* ==== CSV fetch & parse (with delimiter detection) ==== */
-async function fetchCSV(){
-  const res = await fetch(csvUrl(), { cache: 'no-store' });
-  return await res.text();
-}
-function detectDelimiter(text){
-  const first = text.split(/\r?\n/)[0] || '';
-  const commas=(first.match(/,/g)||[]).length, semis=(first.match(/;/g)||[]).length;
-  return semis>commas?';':',';
-}
+/* ==== CSV fetch & parse ==== */
+async function fetchCSV(){ const res = await fetch(csvUrl(), { cache: 'no-store' }); return await res.text(); }
+function detectDelimiter(text){ const first=text.split(/\r?\n/)[0]||''; const c=(first.match(/,/g)||[]).length, s=(first.match(/;/g)||[]).length; return s>c?';':','; }
 function parseCSV(text){
-  const delim = detectDelimiter(text);
-  if (delim === ';') {
-    return text.trim().split(/\r?\n/).map(line => line.split(';').map(s=>s.replace(/^"(.*)"$/,'$1')));
-  }
-  // robust comma parser
+  const d = detectDelimiter(text);
+  if (d === ';') return text.trim().split(/\r?\n/).map(l=>l.split(';').map(s=>s.replace(/^"(.*)"$/,'$1')));
   const rows=[]; let row=[], cur='', q=false;
   for(let i=0;i<text.length;i++){
     const c=text[i], n=text[i+1];
-    if(c==='"' && q && n==='"'){ cur+='"'; i++; continue; }
-    if(c==='"'){ q=!q; continue; }
-    if(c===',' && !q){ row.push(cur); cur=''; continue; }
-    if((c==='\n'||c==='\r') && !q){ if(cur.length||row.length){ row.push(cur); rows.push(row); } row=[]; cur=''; continue; }
+    if(c==='"'&&q&&n==='"'){cur+='"';i++;continue;}
+    if(c==='"'){q=!q;continue;}
+    if(c===','&&!q){row.push(cur);cur='';continue;}
+    if((c==='\n'||c==='\r')&&!q){if(cur.length||row.length){row.push(cur);rows.push(row);}row=[];cur='';continue;}
     cur+=c;
   }
-  if(cur.length||row.length){ row.push(cur); rows.push(row); }
+  if(cur.length||row.length){row.push(cur);rows.push(row);}
   return rows;
 }
 
 /* ==== UI rendering ==== */
 function renderTable(rows){
-  const tbody = $('#dataTable tbody');
-  tbody.innerHTML = '';
-  let sumVisible = 0;
-
-  // Your sheet headers: 時間戳記 | Date | Item | Cost | Overall | Status
+  const tbody = $('#dataTable tbody'); tbody.innerHTML = ''; let sumVisible = 0;
+  // Sheet headers: 時間戳記 | Date | Item | Cost | Overall | Status
   rows.slice(1).forEach(r=>{
-    const date = r[1] || r[0];              // B: Date (fallback A)
-    const item = r[2] || '';                // C: Item
-    const cost = parseFloat((r[3]||'').replace(/[^0-9.\-]/g,'')); // D: Cost
+    const date = r[1] || r[0], item = r[2] || '';
+    const cost = parseFloat((r[3]||'').replace(/[^0-9.\-]/g,''));
     if(!date && !item && isNaN(cost)) return;
-
     const tr=document.createElement('tr');
     tr.innerHTML = `<td>${date||''}</td><td>${item||''}</td><td class="right">${isNaN(cost)?'':fmtMoney(cost)}</td>`;
     tbody.appendChild(tr);
     if(!isNaN(cost)) sumVisible += cost;
   });
-
   $('#visibleSum').textContent = fmtMoney(sumVisible);
   $('#total').textContent = fmtMoney(sumVisible);
-  $('#totalAll').textContent = fmtMoney(sumVisible); // simple page total == visible
+  $('#totalAll').textContent = fmtMoney(sumVisible);
 }
 
 function updateTopBadges(rows){
-  if(!rows || !rows.length){
-    $('#overallValue').textContent='—';
-    $('#statusValue').textContent='—';
-    return;
-  }
+  if(!rows || !rows.length){ $('#overallValue').textContent='—'; $('#statusValue').textContent='—'; return; }
   const headers = rows[0].map(h => (h||'').toString().trim());
   const norm = s => (s||'').toString().trim().toUpperCase();
   let overallIdx = headers.findIndex(h => norm(h).includes('OVERALL'));
   let statusIdx  = headers.findIndex(h => norm(h).includes('STATUS'));
-
-  // Fallback to fixed columns E/F
-  if (overallIdx < 0) overallIdx = 4;
-  if (statusIdx  < 0) statusIdx  = 5;
-
-  // Prefer row 2; if empty, scan down
+  if (overallIdx < 0) overallIdx = 4; // E
+  if (statusIdx  < 0) statusIdx  = 5; // F
   const pick = (col) => {
     if (rows[1] && rows[1][col] !== undefined && rows[1][col] !== '') return rows[1][col];
-    for(let r=1;r<rows.length;r++){
-      if(rows[r] && String(rows[r][col]||'').trim()!=='') return rows[r][col];
-    }
+    for(let r=1;r<rows.length;r++){ if(rows[r] && String(rows[r][col]||'').trim()!=='') return rows[r][col]; }
     return '—';
   };
-
-  const overall = pick(overallIdx);
-  const status  = pick(statusIdx);
-
-  const overallEl = $('#overallValue');
-  const statusEl  = $('#statusValue');
-  overallEl.textContent = overall;
-  statusEl.textContent  = status;
-
-  // badge color
+  const overall = pick(overallIdx), status = pick(statusIdx);
+  const overallEl = $('#overallValue'), statusEl = $('#statusValue');
+  overallEl.textContent = overall; statusEl.textContent = status;
   statusEl.classList.remove('ok','warn'); overallEl.classList.remove('ok','warn');
   const isUnpaid = /UNPAID|未|欠/i.test(String(status)) || (/^\s*[1-9]\d*(\.\d+)?\s*$/.test(String(overall)));
   if (isUnpaid){ statusEl.classList.add('warn'); overallEl.classList.add('warn'); }
@@ -262,25 +223,19 @@ $('#refreshBtn').addEventListener('click', refresh);
 $('#entryForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const msg = $('#msg'); msg.textContent='送出中…';
-
-  const dVal = $('#dateInput').value;
-  if(!dVal){ msg.textContent='請選日期'; return; }
+  const dVal = $('#dateInput').value; if(!dVal){ msg.textContent='請選日期'; return; }
   const d = new Date(dVal);
-
   const fd = new FormData();
   fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
   fd.append(FORM_FIELDS.dateMonth, d.getMonth()+1);
   fd.append(FORM_FIELDS.dateDay,   d.getDate());
   fd.append(FORM_FIELDS.item, $('#itemInput').value.trim());
   fd.append(FORM_FIELDS.cost, $('#costInput').value.trim());
-  // 若之後加了狀態欄位： fd.append(FORM_FIELDS.status, $('#statusInput').value);
-
   try{
     await fetch(GOOGLE_FORM_ACTION,{method:'POST',mode:'no-cors',body:fd});
     msg.textContent='已新增！';
     $('#itemInput').value=''; $('#costInput').value='';
-    setTimeout(refresh,900);
-    setTimeout(refresh,2200);
+    setTimeout(refresh,900); setTimeout(refresh,2200);
     setTimeout(()=>msg.textContent='',2000);
   }catch(err){
     console.error(err);
