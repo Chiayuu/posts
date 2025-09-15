@@ -141,8 +141,155 @@ const FORM_FIELDS = {
   cost:      'entry.1361977771'
   // if you add a Status field later: status: 'entry.xxxxxxxxxx'
 };
-// IMPORTANT: publish the **Form_Responses2** tab → CSV and paste URL here:
-const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqlW9LOjG7ElOjhal3gZ1v3EKiXMiml-NFSsWH_fD3efz0-G4QYNJcT2woUl1iB5f5DUGMYrzbEYOd/pub?gid=1232924297&single=true&output=csv";
+
+// IMPORTANT: your published CSV (Form_Responses2 tab)
+const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqlW9LOjG7ElOjhal3gZ1v3EKiXMiml-NFSsWH_fD3efz0-G4QYNJcT2woUl1iB5f5DUGMYrzbEYOd/pub?gid=1232924297&single=true&output=csv";
 /* ============================================= */
 
-const $
+/* ==== helpers ==== */
+const $ = s => document.querySelector(s);
+const fmtMoney = n => isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
+const csvUrl = () => BASE_CSV_URL + (BASE_CSV_URL.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+
+/* ==== CSV fetch & parse (with delimiter detection) ==== */
+async function fetchCSV(){
+  const res = await fetch(csvUrl(), { cache: 'no-store' });
+  return await res.text();
+}
+function detectDelimiter(text){
+  const first = text.split(/\r?\n/)[0] || '';
+  const commas=(first.match(/,/g)||[]).length, semis=(first.match(/;/g)||[]).length;
+  return semis>commas?';':',';
+}
+function parseCSV(text){
+  const delim = detectDelimiter(text);
+  if (delim === ';') {
+    return text.trim().split(/\r?\n/).map(line => line.split(';').map(s=>s.replace(/^"(.*)"$/,'$1')));
+  }
+  // robust comma parser
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c==='"' && q && n==='"'){ cur+='"'; i++; continue; }
+    if(c==='"'){ q=!q; continue; }
+    if(c===',' && !q){ row.push(cur); cur=''; continue; }
+    if((c==='\n'||c==='\r') && !q){ if(cur.length||row.length){ row.push(cur); rows.push(row); } row=[]; cur=''; continue; }
+    cur+=c;
+  }
+  if(cur.length||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+
+/* ==== UI rendering ==== */
+function renderTable(rows){
+  const tbody = $('#dataTable tbody');
+  tbody.innerHTML = '';
+  let sumVisible = 0;
+
+  // Your sheet headers: 時間戳記 | Date | Item | Cost | Overall | Status
+  rows.slice(1).forEach(r=>{
+    const date = r[1] || r[0];              // B: Date (fallback A)
+    const item = r[2] || '';                // C: Item
+    const cost = parseFloat((r[3]||'').replace(/[^0-9.\-]/g,'')); // D: Cost
+    if(!date && !item && isNaN(cost)) return;
+
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${date||''}</td><td>${item||''}</td><td class="right">${isNaN(cost)?'':fmtMoney(cost)}</td>`;
+    tbody.appendChild(tr);
+    if(!isNaN(cost)) sumVisible += cost;
+  });
+
+  $('#visibleSum').textContent = fmtMoney(sumVisible);
+  $('#total').textContent = fmtMoney(sumVisible);
+  $('#totalAll').textContent = fmtMoney(sumVisible); // simple page total == visible
+}
+
+function updateTopBadges(rows){
+  if(!rows || !rows.length){
+    $('#overallValue').textContent='—';
+    $('#statusValue').textContent='—';
+    return;
+  }
+  const headers = rows[0].map(h => (h||'').toString().trim());
+  const norm = s => (s||'').toString().trim().toUpperCase();
+  let overallIdx = headers.findIndex(h => norm(h).includes('OVERALL'));
+  let statusIdx  = headers.findIndex(h => norm(h).includes('STATUS'));
+
+  // Fallback to fixed columns E/F
+  if (overallIdx < 0) overallIdx = 4;
+  if (statusIdx  < 0) statusIdx  = 5;
+
+  // Prefer row 2; if empty, scan down
+  const pick = (col) => {
+    if (rows[1] && rows[1][col] !== undefined && rows[1][col] !== '') return rows[1][col];
+    for(let r=1;r<rows.length;r++){
+      if(rows[r] && String(rows[r][col]||'').trim()!=='') return rows[r][col];
+    }
+    return '—';
+  };
+
+  const overall = pick(overallIdx);
+  const status  = pick(statusIdx);
+
+  const overallEl = $('#overallValue');
+  const statusEl  = $('#statusValue');
+  overallEl.textContent = overall;
+  statusEl.textContent  = status;
+
+  // badge color
+  statusEl.classList.remove('ok','warn'); overallEl.classList.remove('ok','warn');
+  const isUnpaid = /UNPAID|未|欠/i.test(String(status)) || (/^\s*[1-9]\d*(\.\d+)?\s*$/.test(String(overall)));
+  if (isUnpaid){ statusEl.classList.add('warn'); overallEl.classList.add('warn'); }
+  else { statusEl.classList.add('ok'); overallEl.classList.add('ok'); }
+}
+
+/* ==== refresh flow ==== */
+async function refresh(){
+  try{
+    $('#statusValue').textContent='Loading…';
+    const csvText = await fetchCSV();
+    const rows = parseCSV(csvText);
+    renderTable(rows);
+    updateTopBadges(rows);
+  }catch(e){
+    console.error(e);
+    $('#statusValue').textContent='Load error';
+  }
+}
+$('#refreshBtn').addEventListener('click', refresh);
+
+/* ==== submit to Google Form ==== */
+$('#entryForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = $('#msg'); msg.textContent='送出中…';
+
+  const dVal = $('#dateInput').value;
+  if(!dVal){ msg.textContent='請選日期'; return; }
+  const d = new Date(dVal);
+
+  const fd = new FormData();
+  fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
+  fd.append(FORM_FIELDS.dateMonth, d.getMonth()+1);
+  fd.append(FORM_FIELDS.dateDay,   d.getDate());
+  fd.append(FORM_FIELDS.item, $('#itemInput').value.trim());
+  fd.append(FORM_FIELDS.cost, $('#costInput').value.trim());
+  // 若之後加了狀態欄位： fd.append(FORM_FIELDS.status, $('#statusInput').value);
+
+  try{
+    await fetch(GOOGLE_FORM_ACTION,{method:'POST',mode:'no-cors',body:fd});
+    msg.textContent='已新增！';
+    $('#itemInput').value=''; $('#costInput').value='';
+    setTimeout(refresh,900);
+    setTimeout(refresh,2200);
+    setTimeout(()=>msg.textContent='',2000);
+  }catch(err){
+    console.error(err);
+    msg.textContent='送出失敗，請重試';
+  }
+});
+
+// initial load
+refresh();
+</script>
+</body>
+</html>
