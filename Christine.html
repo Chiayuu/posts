@@ -1,134 +1,268 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="zh-TW">
 <head>
-  <title>欠錢仔 欠錢不還</title>
   <meta charset="utf-8" />
+  <title>Shared Cost Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <link rel="stylesheet" href="assets/css/main.css" />
   <style>
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
-    tfoot td { font-weight: bold; }
-    .right { text-align: right; }
-    button { cursor: pointer; }
+    :root{
+      --radius:14px; --pad:14px; --gap:14px; --font:16px;
+    }
+    body{font-size:var(--font); line-height:1.55;}
+    .wrap{max-width:980px;margin:0 auto;padding:16px;}
+    .card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:var(--pad);box-shadow:0 2px 16px rgba(0,0,0,.04);}
+    .section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
+    .toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid #eee;padding:10px 16px;}
+    .toolbar .inline{display:flex;gap:10px;align-items:center;justify-content:space-between;max-width:980px;margin:0 auto;}
+    .pill{display:inline-block;padding:.25rem .6rem;border-radius:999px;border:1px solid #e6e6e6;font-weight:600}
+    .pill.ok{background:#e9f7ef;border-color:#d4efdf}
+    .pill.warn{background:#fff6e6;border-color:#ffe0a3}
+    form label{display:block;margin:.5rem 0 .25rem}
+    input,select,button{width:100%;padding:.7rem .8rem;border:1px solid #ddd;border-radius:10px;font-size:1rem}
+    button{cursor:pointer;border:1px solid #ccc;background:#f7f7f7}
+    button.primary{background:#111;color:#fff;border-color:#111}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+    .muted{color:#666}
+    .table-wrap{overflow-x:auto;margin-top:12px}
+    table{min-width:560px;width:100%;border-collapse:collapse}
+    th,td{padding:.65rem;border-bottom:1px solid #eee;text-align:left}
+    td.right,th.right{text-align:right}
+    tfoot td{font-weight:700}
+    @media (max-width: 880px){
+      :root{--font:17px}
+      .section{grid-template-columns:1fr}
+      .grid-2{grid-template-columns:1fr}
+      .toolbar .inline{gap:8px}
+    }
+    @media (prefers-color-scheme: dark){
+      body{background:#0b0b0b;color:#e7e7e7}
+      .card{background:#141414;border-color:#2a2a2a;box-shadow:none}
+      input,select{background:#0f0f0f;border-color:#2a2a2a;color:#e7e7e7}
+      button{background:#1c1c1c;border-color:#2a2a2a;color:#e7e7e7}
+      table{color:#e7e7e7}
+      th,td{border-bottom:1px solid #2a2a2a}
+      .toolbar{background:rgba(11,11,11,.85);border-color:#2a2a2a}
+    }
   </style>
 </head>
 <body class="is-preload">
-<header id="header">
-  <div class="inner">
-    <h1><strong>CHIAYU's WEBSITE</strong></h1>
-    <h1>An Engineer.</h1>
+
+  <!-- 站頭（沿用你的樣式） -->
+  <header id="header">
+    <div class="inner">
+      <h1><strong>CHIAYU's WEBSITE</strong></h1>
+      <h1>An Engineer.</h1>
+      <h1 align="right"><a href="https://chiayuu.github.io/"> HOME ■</a></h1>
+      <h1 align="right"><a href="scloutline.html"> SCHOOL PROJECT ■</a></h1>
+      <h1 align="right"><a href="selfoutline.html"> SELF PROJECT ■</a></h1>
+      <h1 align="right"><b>SECRET PAGE ■</b></h1>
+    </div>
+  </header>
+
+  <!-- 吸頂工具列（手機操作更方便） -->
+  <div class="toolbar">
+    <div class="inline">
+      <div><b>Shared Cost Tracker</b></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span>OVERALL: <span id="overallValue" class="pill warn">—</span></span>
+        <span>STATUS: <span id="statusValue" class="pill warn">Loading…</span></span>
+        <button id="refreshBtn" class="pill" type="button">🔄 Refresh</button>
+      </div>
+    </div>
   </div>
-</header>
 
-<div id="main">
-  <section id="one">
-    <header class="major">
-      <h2>💸 Shared Cost Tracker</h2>
-      <p>欠錢仔 是小窮鬼 哈哈哈 哈哈 哈</p>
-    </header>
+  <div id="main" class="wrap">
+    <section id="one">
+      <div class="section">
+        <!-- 左：輸入 -->
+        <div class="card">
+          <h3 style="margin-top:0">新增一筆</h3>
+          <form id="entryForm">
+            <div class="grid-2">
+              <div>
+                <label>日期</label>
+                <input type="date" id="dateInput" required />
+              </div>
+              <div>
+                <label>金額</label>
+                <input type="number" id="costInput" step="0.01" inputmode="decimal" placeholder="例如 12.50" required />
+              </div>
+              <div>
+                <label>項目</label>
+                <input type="text" id="itemInput" placeholder="Coffee / Uber ..." required />
+              </div>
+              <div>
+                <label class="muted">狀態（表單尚未建立可略）</label>
+                <select id="statusInput" disabled>
+                  <option value="">—</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <button type="submit" class="primary">➕ 新增</button>
+              <span id="msg" class="muted" aria-live="polite"></span>
+            </div>
+          </form>
+          <p class="muted" style="margin:.6rem 0 0">送出後 1–2 秒自動更新；若未看到新資料請按 Refresh。</p>
+        </div>
 
-    <!-- 表單 -->
-    <form id="entryForm">
-      <label>日期：<input type="date" id="dateInput" required></label><br>
-      <label>項目：<input type="text" id="itemInput" required></label><br>
-      <label>金額：<input type="number" id="costInput" step="0.01" required></label><br>
-      <button type="submit">➕ 新增</button>
-      <span id="msg" style="margin-left:.5rem;color:gray;"></span>
-    </form>
+        <!-- 右：總覽 -->
+        <div class="card">
+          <h3 style="margin-top:0">總覽</h3>
+          <div class="grid-2">
+            <div><b>合計（頁面計）</b><br><span id="totalAll">$0.00</span></div>
+            <div><b>可見列合計</b><br><span id="visibleSum">$0.00</span></div>
+          </div>
+          <p class="muted" style="margin-top:10px">
+            上方 OVERALL / STATUS 直接取自試算表 E/F 欄（你的公式計算結果）。
+          </p>
+        </div>
+      </div>
 
-    <!-- 顯示表格 -->
-    <table id="dataTable">
-      <thead>
-        <tr><th>日期</th><th>項目</th><th class="right">金額</th></tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr><td colspan="2" class="right">合計：</td><td class="right" id="total">$0.00</td></tr>
-      </tfoot>
-    </table>
-    <button id="refreshBtn" style="margin-top:.5rem;">🔄 重新整理</button>
-  </section>
-</div>
+      <!-- 表格 -->
+      <div class="card" style="margin-top:var(--gap)">
+        <h3 style="margin-top:0">所有項目</h3>
+        <div class="table-wrap">
+          <table id="dataTable" role="table">
+            <thead>
+              <tr><th>日期</th><th>項目</th><th class="right">金額</th></tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" class="right">合計：</td>
+                <td class="right" id="total">$0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
 
 <script>
-/* ========== 這裡放你的 Google Form 設定 ========== */
+/* ====== 必填：你的 Google Form / Sheet 連結設定 ====== */
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSd4fYEjOVAd4pqplNQPAVHjmNAfgHSuKATlyZjpPlLcxYlPEw/formResponse";
-
 const FORM_FIELDS = {
   dateYear:  'entry.1832617978_year',
   dateMonth: 'entry.1832617978_month',
   dateDay:   'entry.1832617978_day',
   item:      'entry.1202275953',
   cost:      'entry.1361977771'
-  // status: 'entry.xxxxxxxx' // 如果之後加了狀態，補這裡
+  // 若之後在 Google 表單新增狀態欄位： status: 'entry.xxxxxxxxxx'
 };
+// ⬇️ 把下面換成你的「發佈到網路 → CSV」連結
+const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/REPLACE_ME/pub?output=csv";
+/* ===================================================== */
 
-// 發佈為 CSV 的網址，記得在 Google Sheet -> 檔案 -> 分享 -> 發佈到網路，複製 CSV 連結
-const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv";
-/* ================================================= */
+const $ = s => document.querySelector(s);
+const fmtMoney = n => isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
 
-function formatMoney(n) {
-  return isNaN(n) ? '$0.00' : '$' + n.toFixed(2);
+async function fetchCSV(url){
+  const res = await fetch(url, {cache:'no-store'});
+  return await res.text();
 }
 
-async function fetchCSV() {
-  const res = await fetch(PUBLISHED_CSV_URL, { cache: 'no-store' });
-  const text = await res.text();
-  const rows = text.trim().split('\n').map(r => r.split(','));
+// 簡單 CSV 解析（支援引號與逗號）
+function parseCSV(text){
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c==='"' && q && n==='"'){ cur+='"'; i++; continue; }
+    if(c==='"'){ q=!q; continue; }
+    if(c===',' && !q){ row.push(cur); cur=''; continue; }
+    if((c==='\n'||c==='\r') && !q){ if(cur.length||row.length){ row.push(cur); rows.push(row); } row=[]; cur=''; continue; }
+    cur+=c;
+  }
+  if(cur.length||row.length){ row.push(cur); rows.push(row); }
   return rows;
 }
 
-async function refreshTable() {
-  try {
-    const rows = await fetchCSV();
-    const tbody = document.querySelector('#dataTable tbody');
-    tbody.innerHTML = '';
-    let sum = 0;
-    rows.slice(1).forEach(r => {
-      const date = r[0], item = r[1], cost = parseFloat(r[2]);
-      if (!date && !item && isNaN(cost)) return;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${date}</td><td>${item}</td><td class="right">${formatMoney(cost)}</td>`;
-      tbody.appendChild(tr);
-      if (!isNaN(cost)) sum += cost;
-    });
-    document.getElementById('total').textContent = formatMoney(sum);
-  } catch (e) {
-    console.error('讀取表格失敗', e);
+function renderTable(rows){
+  const tbody = $('#dataTable tbody');
+  tbody.innerHTML = '';
+  let sumVisible = 0;
+  rows.slice(1).forEach(r=>{
+    const date=r[0], item=r[1], cost=parseFloat((r[2]||'').replace(/[^0-9.\-]/g,''));
+    if(!date && !item && isNaN(cost)) return;
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${date||''}</td><td>${item||''}</td><td class="right">${isNaN(cost)?'':fmtMoney(cost)}</td>`;
+    tbody.appendChild(tr);
+    if(!isNaN(cost)) sumVisible += cost;
+  });
+  $('#visibleSum').textContent = fmtMoney(sumVisible);
+  $('#total').textContent = fmtMoney(sumVisible);
+  $('#totalAll').textContent = fmtMoney(sumVisible); // 簡易：頁面總計同 visible
+}
+
+function updateTopBadges(rows){
+  const headers = rows[0] || [];
+  const overallIdx = headers.findIndex(h => (h||'').toUpperCase().includes('OVERALL'));
+  const statusIdx  = headers.findIndex(h => (h||'').toUpperCase().includes('STATUS'));
+  const row2 = rows[1] || [];
+  const overall = overallIdx>=0 ? (row2[overallIdx] || '0') : '—';
+  const status  = statusIdx>=0  ? (row2[statusIdx]  || '—') : '—';
+  const overallEl = $('#overallValue');
+  const statusEl  = $('#statusValue');
+  overallEl.textContent = overall;
+  statusEl.textContent  = status;
+
+  // 標籤顏色
+  statusEl.classList.remove('ok','warn');
+  overallEl.classList.remove('ok','warn');
+  const unpaid = String(status).toLowerCase().includes('unpaid') || String(overall).match(/^[1-9]\d*(\.\d+)?$/);
+  if (unpaid){ statusEl.classList.add('warn'); overallEl.classList.add('warn'); }
+  else { statusEl.classList.add('ok'); overallEl.classList.add('ok'); }
+}
+
+async function refresh(){
+  try{
+    $('#statusValue').textContent = 'Loading…';
+    const csv = await fetchCSV(PUBLISHED_CSV_URL);
+    const rows = parseCSV(csv);
+    renderTable(rows);
+    updateTopBadges(rows);
+  }catch(e){
+    console.error(e);
+    $('#statusValue').textContent = 'Load error';
   }
 }
 
-document.getElementById('refreshBtn').addEventListener('click', refreshTable);
+$('#refreshBtn').addEventListener('click', refresh);
 
-document.getElementById('entryForm').addEventListener('submit', async (e) => {
+$('#entryForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const msg = document.getElementById('msg');
-  msg.textContent = '送出中...';
+  const msg = $('#msg');
+  msg.textContent = '送出中…';
 
-  const d = new Date(document.getElementById('dateInput').value);
+  const dVal = $('#dateInput').value;
+  if(!dVal){ msg.textContent='請選日期'; return; }
+  const d = new Date(dVal);
+
   const fd = new FormData();
   fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
-  fd.append(FORM_FIELDS.dateMonth, d.getMonth() + 1);
+  fd.append(FORM_FIELDS.dateMonth, d.getMonth()+1);
   fd.append(FORM_FIELDS.dateDay,   d.getDate());
-  fd.append(FORM_FIELDS.item, document.getElementById('itemInput').value.trim());
-  fd.append(FORM_FIELDS.cost, document.getElementById('costInput').value.trim());
+  fd.append(FORM_FIELDS.item, $('#itemInput').value.trim());
+  fd.append(FORM_FIELDS.cost, $('#costInput').value.trim());
 
-  try {
-    await fetch(GOOGLE_FORM_ACTION, { method: 'POST', mode: 'no-cors', body: fd });
+  try{
+    await fetch(GOOGLE_FORM_ACTION, { method:'POST', mode:'no-cors', body:fd });
     msg.textContent = '已新增！';
-    document.getElementById('itemInput').value = '';
-    document.getElementById('costInput').value = '';
-    setTimeout(refreshTable, 1200); // 稍等 Google 寫入
-    setTimeout(() => msg.textContent = '', 2000);
-  } catch (err) {
+    $('#itemInput').value = '';
+    $('#costInput').value = '';
+    setTimeout(refresh, 900);
+    setTimeout(refresh, 2200);
+    setTimeout(()=> msg.textContent='', 2000);
+  }catch(err){
     console.error(err);
-    msg.textContent = '送出失敗';
+    msg.textContent = '送出失敗，請重試';
   }
 });
 
-// 初始載入表格
-refreshTable();
+// 初次載入
+refresh();
 </script>
 </body>
 </html>
