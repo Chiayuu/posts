@@ -109,13 +109,6 @@
               <tr><th>日期📅</th><th>項目🥐</th><th class="right">金額💰</th></tr>
             </thead>
             <tbody></tbody>
-            <tfoot>
-            <tr>
-              <td colspan="2" class="right">合計：</td>
-              <td class="right" id="total">$0.00</td>
-            </tr>
-          </tfoot>
-
           </table>
         </div>
       </div>
@@ -186,9 +179,10 @@ function renderTable(rows){
     if (!isNaN(cost)) sumVisible += cost;
   });
 
-  document.getElementById('visibleSum').textContent = (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2);
-  document.getElementById('total').textContent      = (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2);
-  document.getElementById('totalAll').textContent   = (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2);
+setText('visibleSum', (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
+setText('total',      (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
+setText('totalAll',   (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
+
 }
 
 function updateTopBadges(rows){
