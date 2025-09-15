@@ -40,6 +40,11 @@
     td.right,th.right{text-align:right}
     tfoot td{font-weight:700}
 
+    /* header row above table (for refresh) */
+    .table-header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;
+    }
+
     /* iPhone/mobile layout */
     @media (max-width: 880px){
       .section{grid-template-columns:1fr}
@@ -66,25 +71,13 @@
         font-weight:600;color:#444;
       }
       td.right{text-align:left}
-      /* inputs & buttons full-width and comfy tap targets */
       .grid-2{gap:10px}
       input,select,button{padding:16px;border-radius:12px}
       .pill{height:40px}
+      .table-header{flex-wrap:wrap}
+      .table-header h3{margin:0}
+      .table-header #refreshBtn{width:100%}
     }
-
-    .table-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:8px;
-  }
-  @media (max-width:540px){
-    .table-header{flex-wrap:wrap}
-    .table-header h3{margin:0}
-    .table-header #refreshBtn{width:100%} /* full-width on iPhone for easy tap */
-  }
-
   </style>
 </head>
 <body class="is-preload">
@@ -96,7 +89,7 @@
     </div>
   </header>
 
-  <!-- sticky toolbar with badges -->
+  <!-- sticky toolbar with badges (no refresh button here) -->
   <div class="toolbar">
     <div class="inner2">
       <div><b>欠錢仔 欠錢不還</b></div>
@@ -116,21 +109,23 @@
 
       <div class="section">
         <!-- left: input -->
-        <div class="card" style="margin-top:var(--gap)">
-        <div class="table-header">
-          <h3 style="margin:0">所有項目</h3>
-          <button id="refreshBtn" class="pill" type="button">🔄 重新整理</button>
-        </div>
-        <div class="table-wrap">
-          <table id="dataTable" class="responsive" role="table">
-            <thead>
-              <tr><th>日期📅</th><th>項目🥐</th><th class="right">金額💰</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
+        <div class="card">
+          <h3 style="margin-top:0">新增一筆</h3>
+          <form id="entryForm">
+            <div class="grid-2">
+              <div>
+                <label>日期📅</label>
+                <input type="date" id="dateInput" required />
+              </div>
+              <div>
+                <label>金額💰</label>
+                <input type="number" id="costInput" step="0.01" inputmode="decimal" placeholder="例如 12.50" required />
+              </div>
+              <div style="grid-column:1 / -1">
+                <label>項目🥐</label>
+                <input type="text" id="itemInput" placeholder="Coffee / Uber ..." required />
+              </div>
+            </div>
             <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
               <button type="submit" class="primary" style="flex:1 1 180px">➕ 新增</button>
               <span id="msg" class="muted" aria-live="polite" style="align-self:center"></span>
@@ -138,13 +133,14 @@
           </form>
           <p class="muted" style="margin:.6rem 0 0">送出後 1–2 秒自動更新；若未看到新資料請按「重新整理」。</p>
         </div>
-
-        <!-- (optional right column removed on mobile automatically) -->
       </div>
 
       <!-- table -->
       <div class="card" style="margin-top:var(--gap)">
-        <h3 style="margin-top:0">所有項目</h3>
+        <div class="table-header">
+          <h3 style="margin:0">所有項目</h3>
+          <button id="refreshBtn" class="pill" type="button">🔄 重新整理</button>
+        </div>
         <div class="table-wrap">
           <table id="dataTable" class="responsive" role="table">
             <thead>
@@ -165,7 +161,7 @@ const FORM_FIELDS = {
   dateMonth: 'entry.1832617978_month',
   dateDay:   'entry.1832617978_day',
   item:      'entry.1202275953',
-  cost:      'entry.1361977711' // you confirmed this is correct
+  cost:      'entry.1361977711' // confirmed
 };
 // your published CSV (Form_Responses2 tab)
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqlW9LOjG7ElOjhal3gZ1v3EKiXMiml-NFSsWH_fD3efz0-G4QYNJcT2woUl1iB5f5DUGMYrzbEYOd/pub?gid=1232924297&single=true&output=csv";
@@ -175,7 +171,6 @@ const $ = s => document.querySelector(s);
 const fmtMoney = n => isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
 const csvUrl = () => BASE_CSV_URL + (BASE_CSV_URL.includes('?') ? '&' : '?') + 'cb=' + Date.now();
 const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-
 
 /* ==== CSV fetch & parse ==== */
 async function fetchCSV(){ const res = await fetch(csvUrl(), { cache: 'no-store' }); return await res.text(); }
@@ -268,24 +263,24 @@ async function refresh(){
     setText('statusValue','Load error');
   }
 }
-$('#refreshBtn').addEventListener('click', refresh);
+document.getElementById('refreshBtn').addEventListener('click', refresh);
 
 /* ==== submit to Google Form ==== */
-$('#entryForm').addEventListener('submit', async (e)=>{
+document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const msg = $('#msg'); if (msg) msg.textContent = '送出中…';
-  const dVal = $('#dateInput').value; if(!dVal){ if (msg) msg.textContent='請選日期'; return; }
+  const msg = document.getElementById('msg'); if (msg) msg.textContent = '送出中…';
+  const dVal = document.getElementById('dateInput').value; if(!dVal){ if (msg) msg.textContent='請選日期'; return; }
   const d = new Date(dVal);
   const fd = new FormData();
   fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
   fd.append(FORM_FIELDS.dateMonth, d.getMonth()+1);
   fd.append(FORM_FIELDS.dateDay,   d.getDate());
-  fd.append(FORM_FIELDS.item, $('#itemInput').value.trim());
-  fd.append(FORM_FIELDS.cost, $('#costInput').value.trim());
+  fd.append(FORM_FIELDS.item, document.getElementById('itemInput').value.trim());
+  fd.append(FORM_FIELDS.cost, document.getElementById('costInput').value.trim());
   try{
     await fetch(GOOGLE_FORM_ACTION,{method:'POST',mode:'no-cors',body:fd});
     if (msg) msg.textContent='已新增！';
-    $('#itemInput').value=''; $('#costInput').value='';
+    document.getElementById('itemInput').value=''; document.getElementById('costInput').value='';
     setTimeout(refresh,900); setTimeout(refresh,2200);
     setTimeout(()=>{ if (msg) msg.textContent=''; },2000);
   }catch(err){
