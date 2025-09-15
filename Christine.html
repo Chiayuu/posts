@@ -3,43 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <title>欠錢仔 欠錢不還</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
   <link rel="stylesheet" href="assets/css/main.css" />
   <style>
-    /* light-only, minimal overrides that blend with Strata */
+    /* keep theme; optimize layout for iPhone */
     :root{ --radius:12px; --gap:14px; }
+    html,body{height:100%; -webkit-text-size-adjust:100%;}
     .wrap{max-width:980px;margin:0 auto;padding:18px;}
     .card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
     .section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
-    .toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
-    .toolbar .inner2{max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 18px;flex-wrap:wrap;}
+    .toolbar{
+      position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);
+      backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;
+    }
+    .toolbar .inner2{
+      max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;
+      justify-content:space-between;padding:10px 18px;flex-wrap:wrap;
+    }
+    /* safe-area for iPhone notch */
+    @supports (padding: max(0px)) {
+      .toolbar { padding-top: max(0px, env(safe-area-inset-top)); }
+      .wrap { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
+    }
+
     /* --- badge row --- */
-    .badge-group{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;}
+    .badge-group{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .badge-group::-webkit-scrollbar{display:none}
     .badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
     /* long rectangular bar */
     .pill{
-      display:inline-flex;align-items:center;height:36px;
-      padding:0 14px;border-radius:10px;border:1px solid #e6e6e6;
+      display:inline-flex;align-items:center;height:40px; /* bigger tap target */
+      padding:0 16px;border-radius:10px;border:1px solid #e6e6e6;
       background:#f7f7f7;font-weight:600;line-height:1;white-space:nowrap;
       width:max-content;max-width:none;
     }
     .pill.ok{background:#e9f7ef;border-color:#d4efdf}
     .pill.warn{background:#fff6e6;border-color:#ffe0a3}
+
     form label{display:block;margin:.5rem 0 .25rem}
-    input,select,button{width:100%;padding:.7rem .8rem;border:1px solid #ddd;border-radius:10px;font-size:1rem;background:#fff}
+    input,select,button{
+      width:100%;padding:.8rem .9rem;border:1px solid #ddd;border-radius:10px;font-size:16px;background:#fff; /* 16px to avoid iOS zoom */
+      -webkit-appearance:none;appearance:none;
+    }
     button{cursor:pointer;background:#f5f5f5}
-    button.primary{background:#111;color:#fff;border-color:#111}
+    button.primary{background:#111;color:#fff;border-color:#111;min-height:44px}
+
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
     .muted{color:#666}
-    .table-wrap{overflow-x:auto;margin-top:12px}
+
+    .table-wrap{overflow-x:auto;margin-top:12px;-webkit-overflow-scrolling:touch}
     table{min-width:560px;width:100%;border-collapse:collapse}
     th,td{padding:.65rem;border-bottom:1px solid #eee;text-align:left}
     td.right,th.right{text-align:right}
     tfoot td{font-weight:700}
+    thead th{position:sticky;top:0;background:#fff} /* sticky header */
+
+    /* iPhone breakpoints */
     @media (max-width: 880px){
       .section{grid-template-columns:1fr}
       .grid-2{grid-template-columns:1fr}
       .toolbar .inner2{gap:8px}
+    }
+    @media (max-width: 420px){
+      .wrap{padding:14px}
+      .pill{height:44px;padding:0 14px}
+      .badge-group{gap:10px 12px}
     }
   </style>
 </head>
@@ -95,21 +123,20 @@
               <span id="msg" class="muted" aria-live="polite"></span>
             </div>
           </form>
-          <p class="muted" style="margin:.6rem 0 0">送出後 1–2 秒自動更新；若未看到新資料請按 Refresh。</p>
+          <p class="muted" style="margin:.6rem 0 0">送出後 1–2 秒自動更新；若未看到新資料請按 重新整理。</p>
         </div>
 
-
-
-      <!-- table -->
-      <div class="card" style="margin-top:var(--gap)">
-        <h3 style="margin-top:0">所有項目</h3>
-        <div class="table-wrap">
-          <table id="dataTable" role="table">
-            <thead>
-              <tr><th>日期📅</th><th>項目🥐</th><th class="right">金額💰</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <!-- table -->
+        <div class="card" style="margin-top:var(--gap)">
+          <h3 style="margin-top:0">所有項目</h3>
+          <div class="table-wrap">
+            <table id="dataTable" role="table">
+              <thead>
+                <tr><th>日期📅</th><th>項目🥐</th><th class="right">金額💰</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -124,7 +151,6 @@ const FORM_FIELDS = {
   dateDay:   'entry.1832617978_day',
   item:      'entry.1202275953',
   cost:      'entry.1361977711'
-  // if you add a Status field later: status: 'entry.xxxxxxxxxx'
 };
 // your published CSV (Form_Responses2 tab)
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqlW9LOjG7ElOjhal3gZ1v3EKiXMiml-NFSsWH_fD3efz0-G4QYNJcT2woUl1iB5f5DUGMYrzbEYOd/pub?gid=1232924297&single=true&output=csv";
@@ -133,10 +159,7 @@ const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqlW9LOjG
 const $ = s => document.querySelector(s);
 const fmtMoney = n => isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
 const csvUrl = () => BASE_CSV_URL + (BASE_CSV_URL.includes('?') ? '&' : '?') + 'cb=' + Date.now();
-const setText = (id, value) => {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-};
+const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
 
 /* ==== CSV fetch & parse ==== */
 async function fetchCSV(){ const res = await fetch(csvUrl(), { cache: 'no-store' }); return await res.text(); }
@@ -157,16 +180,13 @@ function parseCSV(text){
   return rows;
 }
 
-/* ==== UI rendering ==== */
+/* ==== UI rendering (last row first) ==== */
 function renderTable(rows){
   const tbody = document.querySelector('#dataTable tbody');
   tbody.innerHTML = '';
   let sumVisible = 0;
 
-  const dataRows = rows.slice(1).filter(r =>
-    r && r.some(c => String(c || '').trim() !== '')
-  );
-
+  const dataRows = rows.slice(1).filter(r => r && r.some(c => String(c || '').trim() !== ''));
   dataRows.reverse().forEach(r => {
     const date = r[1] || r[0];               // B: Date (fallback A)
     const item = r[2] || '';                 // C: Item
@@ -174,23 +194,18 @@ function renderTable(rows){
     if (!date && !item && isNaN(cost)) return;
 
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${date || ''}</td>
-      <td>${item || ''}</td>
-      <td class="right">${isNaN(cost) ? '' : (cost < 0 ? '-' : '') + '$' + Math.abs(cost).toFixed(2)}</td>
-    `;
+    tr.innerHTML = `<td>${date || ''}</td><td>${item || ''}</td><td class="right">${isNaN(cost) ? '' : (cost < 0 ? '-' : '') + '$' + Math.abs(cost).toFixed(2)}</td>`;
     tbody.appendChild(tr);
     if (!isNaN(cost)) sumVisible += cost;
   });
 
-setText('visibleSum', (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
-setText('total',      (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
-setText('totalAll',   (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
-
+  setText('visibleSum', (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
+  setText('total',      (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
+  setText('totalAll',   (sumVisible < 0 ? '-' : '') + '$' + Math.abs(sumVisible).toFixed(2));
 }
 
 function updateTopBadges(rows){
-  if(!rows || !rows.length){ $('#overallValue').textContent='—'; $('#statusValue').textContent='—'; return; }
+  if(!rows || !rows.length){ setText('overallValue','—'); setText('statusValue','—'); return; }
   const headers = rows[0].map(h => (h||'').toString().trim());
   const norm = s => (s||'').toString().trim().toUpperCase();
   let overallIdx = headers.findIndex(h => norm(h).includes('OVERALL'));
@@ -203,45 +218,48 @@ function updateTopBadges(rows){
     return '—';
   };
   const overall = pick(overallIdx), status = pick(statusIdx);
-  const overallEl = $('#overallValue'), statusEl = $('#statusValue');
-  overallEl.textContent = overall; statusEl.textContent = status;
-  statusEl.classList.remove('ok','warn'); overallEl.classList.remove('ok','warn');
-  const isUnpaid = /UNPAID|未|欠/i.test(String(status)) || (/^\s*[1-9]\d*(\.\d+)?\s*$/.test(String(overall)));
-  if (isUnpaid){ statusEl.classList.add('warn'); overallEl.classList.add('warn'); }
-  else { statusEl.classList.add('ok'); overallEl.classList.add('ok'); }
+  setText('overallValue', overall); setText('statusValue', status);
+
+  const statusEl = document.getElementById('statusValue'), overallEl = document.getElementById('overallValue');
+  if (statusEl && overallEl){
+    statusEl.classList.remove('ok','warn'); overallEl.classList.remove('ok','warn');
+    const isUnpaid = /UNPAID|未|欠/i.test(String(status)) || (/^\s*[1-9]\d*(\.\d+)?\s*$/.test(String(overall)));
+    if (isUnpaid){ statusEl.classList.add('warn'); overallEl.classList.add('warn'); }
+    else { statusEl.classList.add('ok'); overallEl.classList.add('ok'); }
+  }
 }
 
 /* ==== refresh flow ==== */
 async function refresh(){
   try{
-    $('#statusValue').textContent='Loading…';
+    setText('statusValue','Loading…');
     const csvText = await fetchCSV();
     const rows = parseCSV(csvText);
     renderTable(rows);
     updateTopBadges(rows);
   }catch(e){
     console.error(e);
-    $('#statusValue').textContent='Load error';
+    setText('statusValue','Load error');
   }
 }
-$('#refreshBtn').addEventListener('click', refresh);
+document.getElementById('refreshBtn').addEventListener('click', refresh);
 
 /* ==== submit to Google Form ==== */
-$('#entryForm').addEventListener('submit', async (e)=>{
+document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const msg = $('#msg'); msg.textContent='送出中…';
-  const dVal = $('#dateInput').value; if(!dVal){ msg.textContent='請選日期'; return; }
+  const msg = document.getElementById('msg'); msg.textContent='送出中…';
+  const dVal = document.getElementById('dateInput').value; if(!dVal){ msg.textContent='請選日期'; return; }
   const d = new Date(dVal);
   const fd = new FormData();
   fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
   fd.append(FORM_FIELDS.dateMonth, d.getMonth()+1);
   fd.append(FORM_FIELDS.dateDay,   d.getDate());
-  fd.append(FORM_FIELDS.item, $('#itemInput').value.trim());
-  fd.append(FORM_FIELDS.cost, $('#costInput').value.trim());
+  fd.append(FORM_FIELDS.item, document.getElementById('itemInput').value.trim());
+  fd.append(FORM_FIELDS.cost, document.getElementById('costInput').value.trim());
   try{
     await fetch(GOOGLE_FORM_ACTION,{method:'POST',mode:'no-cors',body:fd});
     msg.textContent='已新增！';
-    $('#itemInput').value=''; $('#costInput').value='';
+    document.getElementById('itemInput').value=''; document.getElementById('costInput').value='';
     setTimeout(refresh,900); setTimeout(refresh,2200);
     setTimeout(()=>msg.textContent='',2000);
   }catch(err){
