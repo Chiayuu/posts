@@ -47,8 +47,8 @@ td.right{text-align:right;}
       </select>
     </div>
     <div class="badge-group">
-      <div class="badge">金額 <span id="overallValue" class="pill warn">$0.00</span></div>
-      <div class="badge">身份 <span id="statusValue" class="pill warn">你來幹嘛仔</span></div>
+      <div class="badge">金額 <span id="overallValue" class="pill warn">—</span></div>
+      <div class="badge">身份 <span id="statusValue" class="pill warn">—</span></div>
     </div>
   </div>
 </div>
@@ -127,57 +127,30 @@ const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJ
 const members=["丁丁","迪西","小波"];
 const $=s=>document.querySelector(s);
 
-/* ====== 欄位互動邏輯 ====== */
-$("#payerSelect").addEventListener("change",()=>{
-  const payer=$("#payerSelect").value;
-  const debtorSelect=$("#debtorSelect");
-  debtorSelect.innerHTML='<option value="">請選擇</option>';
-  $("#splitSelect").value="不用分";$("#splitSelect").disabled=true;
-  $("#splitAmounts").classList.add("hidden");
-  if(payer){
-    members.filter(n=>n!==payer).forEach(n=>{
-      const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
-    });
-    const both=document.createElement("option");both.value="兩個都";both.textContent="兩個都";debtorSelect.appendChild(both);
-  }
-});
-
-$("#debtorSelect").addEventListener("change",()=>{
-  const debtor=$("#debtorSelect").value;
-  const payer=$("#payerSelect").value;
-  const split=$("#splitSelect");
-  const splitAmounts=$("#splitAmounts");
-  if(debtor==="兩個都"){
-    split.disabled=false;
-    split.value="均分";
-    splitAmounts.classList.remove("hidden");
-    const others=members.filter(n=>n!==payer);
-    $("#person1Label").textContent=others[0]+"：";
-    $("#person2Label").textContent=others[1]+"：";
-    handleSplitChange();
-  }else{
-    split.value="不用分";
-    split.disabled=true;
-    splitAmounts.classList.add("hidden");
-  }
-});
-
-$("#splitSelect").addEventListener("change",handleSplitChange);
-function handleSplitChange(){
-  const type=$("#splitSelect").value;
-  const cost=parseFloat($("#costInput").value)||0;
-  const inputs=[$("#person1Amount"),$("#person2Amount")];
-  if(type==="均分"){
-    const half=(cost/2).toFixed(2);
-    inputs.forEach(i=>{i.value=half;i.disabled=true;});
-  }else if(type==="不要均分"){
-    inputs.forEach(i=>{i.value='';i.disabled=false;});
-  }else{
-    inputs.forEach(i=>{i.value='';i.disabled=true;});
-  }
+/* ==== 更新上方金額區 ==== */
+async function updateTopSummary(){
+  try{
+    const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
+    const text=await res.text();
+    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const data=rows.slice(3); // 從第4列開始
+    const user=$("#userSelect").value;
+    const found=data.find(r=>r[7]===user); // HUMAN欄在H
+    if(found){
+      const overall=parseFloat(found[8])||0; // OVERALL欄在I
+      const status=found[9]||"";
+      $("#overallValue").textContent=overall;
+      $("#statusValue").textContent=status;
+      const st=$("#statusValue");
+      st.classList.remove("ok","warn");
+      if(overall>0) st.classList.add("warn");
+      else if(overall<0) st.classList.add("ok");
+    }
+  }catch(e){console.error(e);}
 }
+$("#userSelect").addEventListener("change",updateTopSummary);
 
-/* ====== 表單送出 ====== */
+/* ==== 表單送出 ==== */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const msg=$("#msg"); msg.textContent="送出中…";
@@ -188,86 +161,39 @@ $("#entryForm").addEventListener("submit",async e=>{
   const payer=$("#payerSelect").value;
   const debtor=$("#debtorSelect").value;
   const splitType=$("#splitSelect").value;
-
-  const fdBase=()=>{const fd=new FormData();
-    fd.append(FORM_FIELDS.dateYear,d.getFullYear());
-    fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
-    fd.append(FORM_FIELDS.dateDay,d.getDate());
-    return fd;};
-
+  const fd=new FormData();
+  fd.append(FORM_FIELDS.dateYear,d.getFullYear());
+  fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
+  fd.append(FORM_FIELDS.dateDay,d.getDate());
+  fd.append(FORM_FIELDS.item,item);
+  fd.append(FORM_FIELDS.cost,cost);
+  fd.append(FORM_FIELDS.payer,payer);
+  fd.append(FORM_FIELDS.debtor,debtor);
+  fd.append(FORM_FIELDS.splitType,splitType);
   try{
-    if(debtor==="兩個都"){
-      const others=members.filter(n=>n!==payer);
-      const p1=$("#person1Amount").value||0;
-      const p2=$("#person2Amount").value||0;
-      const type=$("#splitSelect").value;
-      const iName=item+" (SPLIT)";
-      const entries=[
-        {debtor:others[0],amount:(type==="均分"?cost/2:p1)},
-        {debtor:others[1],amount:(type==="均分"?cost/2:p2)}
-      ];
-      for(const ent of entries){
-        const fd=fdBase();
-        fd.append(FORM_FIELDS.item,iName);
-        fd.append(FORM_FIELDS.cost,ent.amount);
-        fd.append(FORM_FIELDS.payer,payer);
-        fd.append(FORM_FIELDS.debtor,ent.debtor);
-        fd.append(FORM_FIELDS.splitType,splitType);
-        await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
-      }
-    }else{
-      const fd=fdBase();
-      fd.append(FORM_FIELDS.item,item);
-      fd.append(FORM_FIELDS.cost,cost);
-      fd.append(FORM_FIELDS.payer,payer);
-      fd.append(FORM_FIELDS.debtor,debtor);
-      fd.append(FORM_FIELDS.splitType,splitType);
-      await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
-    }
+    await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
     msg.textContent="已新增！";
     setTimeout(()=>msg.textContent="",2000);
     $("#entryForm").reset();
-    $("#splitAmounts").classList.add("hidden");
     setTimeout(refresh,1200);
   }catch(err){msg.textContent="送出失敗";}
 });
 
-/* ====== 上方金額狀態 ====== */
-async function updateFixedSummary(){
-  try {
-    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
-    const text = await res.text();
-    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const user=$("#userSelect").value;
-    const userRow = rows.find(r => r[0]===user || r[1]===user);
-    if(!userRow) return;
-    $("#overallValue").textContent = "$" + (parseFloat(userRow[2])||0).toFixed(2);
-    const st=$("#statusValue");
-    const val=parseFloat(userRow[2])||0;
-    st.textContent = val>0?"欠錢仔":val<0?"領錢仔":"你來幹嘛仔";
-    st.classList.remove("ok","warn");
-    if(val>0) st.classList.add("warn"); else if(val<0) st.classList.add("ok");
-  } catch(e){console.log(e);}
-}
-$("#userSelect").addEventListener("change",updateFixedSummary);
-
-/* ====== 讀取表格紀錄 ====== */
+/* ==== 紀錄表 ==== */
 async function refresh(){
   try{
     const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
     const text=await res.text();
     const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
-    renderTable(rows.slice(3)); // 從第四列開始
-    updateFixedSummary();
+    const data=rows.slice(3).reverse(); // 從第4列開始
+    const tbody=$("#dataTable tbody");tbody.innerHTML="";
+    data.forEach(r=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td class="right">${r[3]}</td>`;
+      tbody.appendChild(tr);
+    });
+    updateTopSummary();
   }catch(e){console.error(e);}
-}
-function renderTable(rows){
-  const tbody=$("#dataTable tbody");tbody.innerHTML="";
-  rows.reverse().forEach(r=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${r[1]||""}</td><td>${r[2]||""}</td><td>${r[4]||""}</td><td>${r[5]||""}</td><td>${r[6]||""}</td><td class="right">${r[3]||""}</td>`;
-    tbody.appendChild(tr);
-  });
 }
 $("#refreshBtn").addEventListener("click",refresh);
 document.addEventListener("DOMContentLoaded",refresh);
