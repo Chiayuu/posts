@@ -169,7 +169,7 @@ async function updateTop(){
     const text = await res.text();
     const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
     const user = $("#userSelect").value;
-    const data = rows.slice(3); // 從第4列開始
+    const data = rows.slice(1); // 從第4列開始
     const found = data.find(r => r[7] === user);
     if(found){
       $("#overallValue").textContent = '$' + (found[8] || '0.00');
