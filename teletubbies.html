@@ -25,9 +25,11 @@ body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;}
 td.right{text-align:right;}
+input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 </style>
 </head>
 <body class="is-preload">
+
 <!-- Header -->
 <header id="header">
   <div class="inner">
@@ -142,9 +144,12 @@ $("#payerSelect").addEventListener("change",()=>{
     both.value="兩個都";both.textContent="兩個都";debtor.appendChild(both);
   }
 });
+
+/* 分帳選項控制 */
 $("#debtorSelect").addEventListener("change",()=>{
   const val=$("#debtorSelect").value;
   const payer=$("#payerSelect").value;
+  const cost=parseFloat($("#costInput").value||0);
   if(val==="兩個都"){
     $("#splitSelect").disabled=false;
     $("#splitSelect").value="均分";
@@ -152,6 +157,11 @@ $("#debtorSelect").addEventListener("change",()=>{
     const others=members.filter(x=>x!==payer);
     $("#person1Label").textContent=others[0]+"：";
     $("#person2Label").textContent=others[1]+"：";
+    const half=(cost/2).toFixed(2);
+    $("#person1Amount").value=half;
+    $("#person2Amount").value=half;
+    $("#person1Amount").readOnly=true;
+    $("#person2Amount").readOnly=true;
   } else {
     $("#splitSelect").value="不用分";
     $("#splitSelect").disabled=true;
@@ -159,21 +169,41 @@ $("#debtorSelect").addEventListener("change",()=>{
   }
 });
 
-/* 上方金額讀取 */
+/* 當金額變動時，若是均分則自動更新 */
+$("#costInput").addEventListener("input",()=>{
+  if($("#splitSelect").value==="均分" && $("#debtorSelect").value==="兩個都"){
+    const half=(parseFloat($("#costInput").value||0)/2).toFixed(2);
+    $("#person1Amount").value=half;
+    $("#person2Amount").value=half;
+  }
+});
+
+/* 切換分帳類型時解鎖 */
+$("#splitSelect").addEventListener("change",()=>{
+  if($("#splitSelect").value==="均分"){
+    $("#person1Amount").readOnly=true;
+    $("#person2Amount").readOnly=true;
+  } else {
+    $("#person1Amount").readOnly=false;
+    $("#person2Amount").readOnly=false;
+  }
+});
+
+/* 上方金額 */
 async function updateTop(){
   try{
-    const res = await fetch(BASE_CSV_URL+"&cb="+Date.now());
-    const text = await res.text();
-    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const data = rows.slice(3);
+    const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
+    const text=await res.text();
+    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
     const user=$("#userSelect").value;
+    const data=rows.slice(3);
     const found=data.find(r=>r[7]===user);
     if(found){
-      $("#overallValue").textContent = '$' + found[8];
-      $("#statusValue").textContent = found[9];
+      $("#overallValue").textContent='$'+found[8];
+      $("#statusValue").textContent=found[9];
     } else {
-      $("#overallValue").textContent = '$0.00';
-      $("#statusValue").textContent = '—';
+      $("#overallValue").textContent='$0.00';
+      $("#statusValue").textContent='—';
     }
   }catch(e){console.error(e);}
 }
@@ -194,8 +224,6 @@ $("#entryForm").addEventListener("submit",async e=>{
     debtor:$("#debtorSelect").value,
     splitType:$("#splitSelect").value
   };
-
-  // 兩個都 → 送兩筆
   const promises=[];
   if(fdBase.debtor==="兩個都"){
     const others=members.filter(x=>x!==fdBase.payer);
@@ -217,6 +245,7 @@ $("#entryForm").addEventListener("submit",async e=>{
     } else {
       const a=parseFloat($("#person1Amount").value||0);
       const b=parseFloat($("#person2Amount").value||0);
+      const others=members.filter(x=>x!==fdBase.payer);
       [a,b].forEach((amt,i)=>{
         const fd=new FormData();
         fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
@@ -243,32 +272,32 @@ $("#entryForm").addEventListener("submit",async e=>{
     fd.append(FORM_FIELDS.splitType,fdBase.splitType);
     promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
   }
-
   try{
     await Promise.all(promises);
     msg.textContent="✅ 已新增！";
-    $("#entryForm").reset();$("#splitAmounts").classList.add("hidden");
+    $("#entryForm").reset();
+    $("#splitAmounts").classList.add("hidden");
     setTimeout(()=>msg.textContent="",2000);
-    setTimeout(refresh,1000);
+    await refresh(); // ✅ 送出後立即刷新
   }catch(e){console.error(e);msg.textContent="❌ 送出失敗";}
 });
 
-/* 載入紀錄 */
+/* 重新整理表格 */
 async function refresh(){
   try{
+    console.log("🔄 正在重新載入資料...");
     const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
     const text=await res.text();
     const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const data=rows.slice(3).reverse();
     const tbody=$("#dataTable tbody");
     tbody.innerHTML="";
-    data.forEach(r=>{
+    rows.slice(3).reverse().forEach(r=>{
       const tr=document.createElement("tr");
       tr.innerHTML=`<td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td class="right">${r[3]}</td>`;
       tbody.appendChild(tr);
     });
-    updateTop();
-  }catch(e){console.error(e);}
+    await updateTop();
+  }catch(e){console.error("❌ 載入失敗",e);}
 }
 $("#refreshBtn").addEventListener("click",refresh);
 document.addEventListener("DOMContentLoaded",refresh);
