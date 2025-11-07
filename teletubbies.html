@@ -46,7 +46,7 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
   height:48px;font-size:16px;padding:10px 14px;line-height:1.4;
 }
 
-  /* 頂部「你是誰」選單修正版：文字垂直置中完整顯示 */
+/* 頂部「你是誰」選單修正版 */
 #userSelect {
   height: 48px;
   font-size: 17px;
@@ -56,14 +56,13 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
   background: #fff;
   font-weight: 600;
   box-sizing: border-box;
-  line-height: 48px;       /* ✅ 讓字垂直置中 */
-  appearance: none;        /* 移除系統預設樣式（更一致） */
+  line-height: 48px;
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   background-position: right 12px center;
   background-repeat: no-repeat;
 }
-
 </style>
 </head>
 
@@ -182,7 +181,7 @@ async function updateTop(){
 }
 $("#userSelect").addEventListener("change",updateTop);
 
-/* 欠錢人連動 + 分帳控制 */
+/* 欠錢人連動 + 分帳控制（支援手機隱藏不用分） */
 $("#payerSelect").addEventListener("change",()=>{
   const payer=$("#payerSelect").value,debtor=$("#debtorSelect");
   debtor.innerHTML='<option value="">請選擇</option>';
@@ -195,21 +194,39 @@ $("#payerSelect").addEventListener("change",()=>{
     const both=document.createElement("option");both.value="兩個都";both.textContent="兩個都";debtor.appendChild(both);
   }
 });
+
 $("#debtorSelect").addEventListener("change",()=>{
   const val=$("#debtorSelect").value,payer=$("#payerSelect").value,cost=parseFloat($("#costInput").value||0);
   if(val==="兩個都"){
-    $("#splitSelect").disabled=false;$("#splitSelect").value="均分";$("#splitAmounts").classList.remove("hidden");
+    $("#splitSelect").disabled=false;
+    $("#splitSelect").value="均分";
+    $("#splitAmounts").classList.remove("hidden");
     const others=members.filter(x=>x!==payer);
-    $("#person1Label").textContent=others[0]+"：";$("#person2Label").textContent=others[1]+"：";
+    $("#person1Label").textContent=others[0]+"：";
+    $("#person2Label").textContent=others[1]+"：";
     const half=(cost/2).toFixed(2);
     $("#person1Amount").value=half;$("#person2Amount").value=half;
     $("#person1Amount").readOnly=true;$("#person2Amount").readOnly=true;
-    [...$("#splitSelect").options].forEach(o=>{if(o.value==="不用分")o.hidden=true;});
+
+    // ✅ 手機版：移除「不用分」選項
+    const noSplit=[...$("#splitSelect").options].find(o=>o.value==="不用分");
+    if(noSplit) $("#splitSelect").removeChild(noSplit);
   }else{
-    $("#splitSelect").disabled=true;$("#splitSelect").value="不用分";$("#splitAmounts").classList.add("hidden");
-    [...$("#splitSelect").options].forEach(o=>{if(o.value==="不用分")o.hidden=false;});
+    $("#splitSelect").disabled=true;
+    $("#splitSelect").value="不用分";
+    $("#splitAmounts").classList.add("hidden");
+
+    // ✅ 若「不用分」被移除，重新加回
+    const exist=[...$("#splitSelect").options].some(o=>o.value==="不用分");
+    if(!exist){
+      const opt=document.createElement("option");
+      opt.value="不用分";
+      opt.textContent="不用分";
+      $("#splitSelect").prepend(opt);
+    }
   }
 });
+
 $("#costInput").addEventListener("input",()=>{
   if($("#debtorSelect").value==="兩個都"&&$("#splitSelect").value==="均分"){
     const half=(parseFloat($("#costInput").value||0)/2).toFixed(2);
@@ -225,7 +242,7 @@ $("#splitSelect").addEventListener("change",()=>{
   }else{$("#person1Amount").readOnly=false;$("#person2Amount").readOnly=false;}
 });
 
-/* 表單送出 */
+/* 表單送出與載入紀錄（保持原樣） */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();const msg=$("#msg");msg.textContent="送出中…";
   const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
@@ -261,7 +278,6 @@ $("#entryForm").addEventListener("submit",async e=>{
   }catch(e){console.error(e);msg.textContent="❌ 送出失敗";}
 });
 
-/* 載入紀錄 */
 async function refresh(){
   try{
     const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
@@ -283,6 +299,3 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const t=new Date();$("#dateInput").value=t.toISOString().split('T')[0];
   await refresh();
 });
-</script>
-</body>
-</html>
