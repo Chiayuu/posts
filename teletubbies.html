@@ -122,131 +122,10 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 </div>
 
 <script>
-const GOOGLE_FORM_ACTION = "<!DOCTYPE HTML>
-<html lang="zh-TW">
-<head>
-<meta charset="utf-8" />
-<title>天線寶寶討債集團</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<link rel="stylesheet" href="assets/css/main.css" />
-<style>
-:root{ --radius:12px; --gap:14px; }
-body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
-.wrap{max-width:980px;margin:0 auto;padding:18px;}
-.card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
-.section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
-.toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
-.toolbar .inner2{
-  max-width:980px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 18px;
-  white-space:nowrap;overflow-x:auto;
-}
-.toolbar-left{
-  display:flex;align-items:center;gap:10px;min-width:0;
-}
-.toolbar-left b{font-weight:700;color:#555;}
-.toolbar-left select{
-  height:36px;
-  padding:0 12px;
-  border-radius:10px;
-  border:1px solid #e6e6e6;
-  background:#f7f7f7;
-  font-weight:600;
-  font-size:15px;
-  line-height:1;
-  appearance:none;
-}
-.badge-group{display:flex;align-items:center;gap:12px 14px;}
-.badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.pill{
-  display:inline-flex;align-items:center;height:36px;
-  padding:0 14px;border-radius:10px;
-  border:1px solid #e6e6e6;background:#f7f7f7;
-  font-weight:600;line-height:1;white-space:nowrap;width:max-content;
-}
-.pill.ok{background:#e9f7ef;border-color:#d4efdf}
-.pill.warn{background:#fff6e6;border-color:#ffe0a3}
-.hidden{display:none;}
-</style>
-</head>
-<body class="is-preload">
-
-<header id="header">
-  <div class="inner">
-    <h1><strong>CHIAYU's WEBSITE</strong></h1>
-    <h1>An Engineer.</h1>
-  </div>
-</header>
-
-<!-- Toolbar 一列排列 -->
-<div class="toolbar">
-  <div class="inner2">
-    <div class="toolbar-left">
-      <b>天線寶寶討債集團</b>
-      <select id="userSelect">
-        <option value="丁丁" selected>丁丁</option>
-        <option value="迪西">迪西</option>
-        <option value="小波">小波</option>
-      </select>
-    </div>
-    <div class="badge-group">
-      <div class="badge">金額 <span id="overallValue" class="pill warn">—</span></div>
-      <div class="badge">身份 <span id="statusValue" class="pill warn">Loading…</span></div>
-    </div>
-  </div>
-</div>
-
-<div id="main" class="wrap">
-  <section id="one">
-    <div class="section">
-      <div class="card">
-        <h3 style="margin-top:0">新增一筆</h3>
-        <form id="entryForm">
-          <div class="grid-2">
-            <div><label>日期📅</label><input type="date" id="dateInput" required /></div>
-            <div><label>金額💰</label><input type="number" id="costInput" step="0.01" inputmode="decimal" required /></div>
-            <div><label>項目🥐</label><input type="text" id="itemInput" required /></div>
-            <div><label>付錢的人 👛</label>
-              <select id="payerSelect" required>
-                <option value="">請選擇</option>
-                <option value="丁丁">丁丁</option>
-                <option value="迪西">迪西</option>
-                <option value="小波">小波</option>
-              </select>
-            </div>
-            <div><label>欠錢的人 💸</label>
-              <select id="debtorSelect" required>
-                <option value="">請先選擇付錢的人</option>
-              </select>
-            </div>
-            <div><label>分帳類型 ⚖️</label>
-              <select id="splitSelect" required disabled>
-                <option value="不用分">不用分</option>
-                <option value="均分">均分</option>
-                <option value="不要均分">不要均分</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 動態出現的兩人金額欄 -->
-          <div id="splitAmounts" class="hidden" style="margin-top:10px;">
-            <div><label id="person1Label"></label><input type="number" id="person1Amount" step="0.01" /></div>
-            <div><label id="person2Label"></label><input type="number" id="person2Amount" step="0.01" /></div>
-          </div>
-
-          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-            <button type="submit" class="primary" style="flex:1 1 180px;background:#111;color:#fff;">➕ 新增</button>
-            <span id="msg" class="muted" style="align-self:center;color:#666"></span>
-          </div>
-        </form>
-      </div>
-    </div>
-  </section>
-</div>
-
-<script>
+/* ✅ 改成妳的表單網址 */
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
+
+/* ✅ 這些是 Google Form 的欄位代碼，若不符要重新查 name="entry.XXXX" */
 const FORM_FIELDS = {
   dateYear:'entry.1195304321_year',
   dateMonth:'entry.1195304321_month',
@@ -257,11 +136,14 @@ const FORM_FIELDS = {
   debtor:'entry.426638451',
   splitType:'entry.528419311_sentinel'
 };
+
+/* ✅ 妳的同一份 Sheet CSV */
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
+
 const members=["丁丁","迪西","小波"];
 const $=s=>document.querySelector(s);
 
-// === 直接從同一張 CSV 取 OVERALL / STATUS ===
+/* === 顯示總金額、身份 === */
 async function updateFixedSummary(){
   try {
     const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
@@ -286,11 +168,10 @@ async function updateFixedSummary(){
     console.error("summary fetch failed", e);
   }
 }
-
 $("#userSelect").addEventListener("change", updateFixedSummary);
 document.addEventListener("DOMContentLoaded", updateFixedSummary);
 
-// === 欠錢邏輯 ===
+/* === 欠錢邏輯 === */
 $("#payerSelect").addEventListener("change",()=>{
   const payer=$("#payerSelect").value;
   const debtorSelect=$("#debtorSelect");
@@ -328,7 +209,6 @@ $("#debtorSelect").addEventListener("change",()=>{
 });
 
 $("#splitSelect").addEventListener("change",handleSplitChange);
-
 function handleSplitChange(){
   const type=$("#splitSelect").value;
   const cost=parseFloat($("#costInput").value)||0;
@@ -342,12 +222,12 @@ function handleSplitChange(){
     inputs.forEach(i=>{i.value='';i.disabled=true;});
   }
 }
-
 $("#costInput").addEventListener("input",()=>{
   const type=$("#splitSelect").value;
   if(type==="均分") handleSplitChange();
 });
 
+/* === 寫入 Google Form === */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const msg=$("#msg");
@@ -359,170 +239,6 @@ $("#entryForm").addEventListener("submit",async e=>{
   const payer=$("#payerSelect").value;
   const debtor=$("#debtorSelect").value;
   const splitType=$("#splitSelect").value;
-
-  if(!payer||!debtor){msg.textContent="請選擇付錢人與欠錢人";return;}
-
-  const fdBase=()=>{const fd=new FormData();
-    fd.append(FORM_FIELDS.dateYear,d.getFullYear());
-    fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
-    fd.append(FORM_FIELDS.dateDay,d.getDate());
-    return fd;};
-
-  try{
-    if(debtor==="兩個都"){
-      const others=members.filter(n=>n!==payer);
-      const p1=$("#person1Amount").value||0;
-      const p2=$("#person2Amount").value||0;
-      const type=$("#splitSelect").value;
-      const iName=item+" (SPLIT)";
-      const entries=[
-        {debtor:others[0],amount:(type==="均分"?cost/2:p1)},
-        {debtor:others[1],amount:(type==="均分"?cost/2:p2)}
-      ];
-      for(const ent of entries){
-        const fd=fdBase();
-        fd.append(FORM_FIELDS.item,iName);
-        fd.append(FORM_FIELDS.cost,ent.amount);
-        fd.append(FORM_FIELDS.payer,payer);
-        fd.append(FORM_FIELDS.debtor,ent.debtor);
-        fd.append(FORM_FIELDS.splitType,splitType);
-        await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
-      }
-    }else{
-      const fd=fdBase();
-      fd.append(FORM_FIELDS.item,item);
-      fd.append(FORM_FIELDS.cost,cost);
-      fd.append(FORM_FIELDS.payer,payer);
-      fd.append(FORM_FIELDS.debtor,debtor);
-      fd.append(FORM_FIELDS.splitType,splitType);
-      await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
-    }
-    msg.textContent="已新增！";
-    setTimeout(()=>msg.textContent="",2000);
-    $("#entryForm").reset();
-    $("#splitAmounts").classList.add("hidden");
-  }catch(err){
-    console.error(err);
-    msg.textContent="送出失敗，請重試";
-  }
-});
-</script>
-</body>
-</html>
-";
-const FORM_FIELDS = {
-  dateYear:'entry.1195304321_year',
-  dateMonth:'entry.1195304321_month',
-  dateDay:'entry.1195304321_day',
-  item:'entry.2054976462',
-  cost:'entry.1660109991',
-  payer:'entry.235188570',
-  debtor:'entry.426638451',
-  splitType:'entry.528419311_sentinel'
-};
-const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
-const members=["丁丁","迪西","小波"];
-const $=s=>document.querySelector(s);
-
-// === 直接從同一張 CSV 取 OVERALL / STATUS ===
-async function updateFixedSummary(){
-  try {
-    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
-    const text = await res.text();
-    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const headers = rows[0];
-    if (!headers.includes("HUMAN")) return;
-    const user = $("#userSelect").value;
-    const hIdx = headers.indexOf("HUMAN");
-    const oIdx = headers.indexOf("OVERALL");
-    const sIdx = headers.indexOf("STATUS");
-    const found = rows.find(r => r[hIdx] === user);
-    if(found){
-      $("#overallValue").textContent = '$' + (parseFloat(found[oIdx])||0).toFixed(2);
-      const st = $("#statusValue");
-      st.textContent = found[sIdx] || '你來幹嘛仔';
-      st.classList.remove('ok','warn');
-      if(st.textContent.includes('欠')) st.classList.add('warn');
-      else if(st.textContent.includes('領')) st.classList.add('ok');
-    }
-  } catch(e){
-    console.error("summary fetch failed", e);
-  }
-}
-
-$("#userSelect").addEventListener("change", updateFixedSummary);
-document.addEventListener("DOMContentLoaded", updateFixedSummary);
-
-// === 欠錢邏輯 ===
-$("#payerSelect").addEventListener("change",()=>{
-  const payer=$("#payerSelect").value;
-  const debtorSelect=$("#debtorSelect");
-  debtorSelect.innerHTML='<option value="">請選擇</option>';
-  $("#splitSelect").value="不用分";$("#splitSelect").disabled=true;
-  $("#splitAmounts").classList.add("hidden");
-  if(payer){
-    members.filter(n=>n!==payer).forEach(n=>{
-      const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
-    });
-    const both=document.createElement("option");
-    both.value="兩個都";both.textContent="兩個都";
-    debtorSelect.appendChild(both);
-  }
-});
-
-$("#debtorSelect").addEventListener("change",()=>{
-  const debtor=$("#debtorSelect").value;
-  const payer=$("#payerSelect").value;
-  const split=$("#splitSelect");
-  const splitAmounts=$("#splitAmounts");
-  if(debtor==="兩個都"){
-    split.disabled=false;
-    split.value="均分";
-    splitAmounts.classList.remove("hidden");
-    const others=members.filter(n=>n!==payer);
-    $("#person1Label").textContent=others[0]+"：";
-    $("#person2Label").textContent=others[1]+"：";
-    handleSplitChange();
-  }else{
-    split.value="不用分";
-    split.disabled=true;
-    splitAmounts.classList.add("hidden");
-  }
-});
-
-$("#splitSelect").addEventListener("change",handleSplitChange);
-
-function handleSplitChange(){
-  const type=$("#splitSelect").value;
-  const cost=parseFloat($("#costInput").value)||0;
-  const inputs=[$("#person1Amount"),$("#person2Amount")];
-  if(type==="均分"){
-    const half=(cost/2).toFixed(2);
-    inputs.forEach(i=>{i.value=half;i.disabled=true;});
-  }else if(type==="不要均分"){
-    inputs.forEach(i=>{i.value='';i.disabled=false;});
-  }else{
-    inputs.forEach(i=>{i.value='';i.disabled=true;});
-  }
-}
-
-$("#costInput").addEventListener("input",()=>{
-  const type=$("#splitSelect").value;
-  if(type==="均分") handleSplitChange();
-});
-
-$("#entryForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const msg=$("#msg");
-  msg.textContent="送出中…";
-  const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
-  const d=new Date(dVal);
-  const item=$("#itemInput").value.trim();
-  const cost=parseFloat($("#costInput").value);
-  const payer=$("#payerSelect").value;
-  const debtor=$("#debtorSelect").value;
-  const splitType=$("#splitSelect").value;
-
   if(!payer||!debtor){msg.textContent="請選擇付錢人與欠錢人";return;}
 
   const fdBase=()=>{const fd=new FormData();
