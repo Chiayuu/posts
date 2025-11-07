@@ -12,7 +12,7 @@ body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
 .card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
 .section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
 .toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
-.toolbar .inner2{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;white-space:nowrap;}
+.toolbar .inner2{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;}
 .toolbar-left{display:flex;align-items:center;gap:10px;}
 .toolbar-left b{font-weight:700;color:#555;}
 .toolbar-left select{height:36px;padding:0 12px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;font-size:15px;}
@@ -27,7 +27,14 @@ th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;}
 td.right{text-align:right;}
 </style>
 </head>
-<body>
+<body class="is-preload">
+
+<header id="header">
+  <div class="inner">
+    <h1><strong>CHIAYU's WEBSITE</strong></h1>
+    <h1>An Engineer.</h1>
+  </div>
+</header>
 
 <div class="toolbar">
   <div class="inner2">
@@ -41,7 +48,7 @@ td.right{text-align:right;}
     </div>
     <div class="badge-group">
       <div class="badge">金額 <span id="overallValue" class="pill warn">$0.00</span></div>
-      <div class="badge">身份 <span id="statusValue" class="pill warn">Loading…</span></div>
+      <div class="badge">身份 <span id="statusValue" class="pill warn">你來幹嘛仔</span></div>
     </div>
   </div>
 </div>
@@ -49,8 +56,9 @@ td.right{text-align:right;}
 <div id="main" class="wrap">
   <section id="one">
     <div class="section">
+      <!-- 左側：表單 -->
       <div class="card">
-        <h3>新增一筆</h3>
+        <h3 style="margin-top:0">新增一筆</h3>
         <form id="entryForm">
           <div class="grid-2">
             <div><label>日期📅</label><input type="date" id="dateInput" required /></div>
@@ -87,17 +95,18 @@ td.right{text-align:right;}
           </div>
         </form>
       </div>
-    </div>
 
-    <div class="card" style="margin-top:var(--gap)">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0">紀錄</h3>
-        <button id="refreshBtn" class="pill">🔄 重新整理</button>
+      <!-- 右側：紀錄 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0">紀錄</h3>
+          <button id="refreshBtn" class="pill">🔄 重新整理</button>
+        </div>
+        <table id="dataTable">
+          <thead><tr><th>日期📅</th><th>項目🥐</th><th>付錢人👛</th><th>欠錢人💸</th><th>分帳⚖️</th><th class="right">金額💰</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <table id="dataTable">
-        <thead><tr><th>日期📅</th><th>項目🥐</th><th>付錢人👛</th><th>欠錢人💸</th><th>分帳⚖️</th><th class="right">金額💰</th></tr></thead>
-        <tbody></tbody>
-      </table>
     </div>
   </section>
 </div>
@@ -105,8 +114,8 @@ td.right{text-align:right;}
 <script>
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
 const FORM_FIELDS = {
-  item: 'entry.2054976462',
-  cost: 'entry.1660109991',
+  item:'entry.2054976462',
+  cost:'entry.1660109991',
   payer:'entry.235188570',
   debtor:'entry.426638451',
   splitType:'entry.528419311_sentinel',
@@ -118,7 +127,7 @@ const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJ
 const members=["丁丁","迪西","小波"];
 const $=s=>document.querySelector(s);
 
-// 欠錢人選擇邏輯
+/* ====== 欄位互動邏輯 ====== */
 $("#payerSelect").addEventListener("change",()=>{
   const payer=$("#payerSelect").value;
   const debtorSelect=$("#debtorSelect");
@@ -129,9 +138,7 @@ $("#payerSelect").addEventListener("change",()=>{
     members.filter(n=>n!==payer).forEach(n=>{
       const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
     });
-    const both=document.createElement("option");
-    both.value="兩個都";both.textContent="兩個都";
-    debtorSelect.appendChild(both);
+    const both=document.createElement("option");both.value="兩個都";both.textContent="兩個都";debtorSelect.appendChild(both);
   }
 });
 
@@ -170,27 +177,24 @@ function handleSplitChange(){
   }
 }
 
-$("#costInput").addEventListener("input",()=>{
-  if($("#splitSelect").value==="均分") handleSplitChange();
-});
-
+/* ====== 表單送出 ====== */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const msg=$("#msg"); msg.textContent="送出中…";
   const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
   const d=new Date(dVal);
-  const fdBase=()=>{const fd=new FormData();
-    fd.append(FORM_FIELDS.dateYear,d.getFullYear());
-    fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
-    fd.append(FORM_FIELDS.dateDay,d.getDate());
-    return fd;
-  };
   const item=$("#itemInput").value.trim();
   const cost=parseFloat($("#costInput").value)||0;
   const payer=$("#payerSelect").value;
   const debtor=$("#debtorSelect").value;
   const splitType=$("#splitSelect").value;
-  if(!payer||!debtor){msg.textContent="請選擇付錢人與欠錢人";return;}
+
+  const fdBase=()=>{const fd=new FormData();
+    fd.append(FORM_FIELDS.dateYear,d.getFullYear());
+    fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
+    fd.append(FORM_FIELDS.dateDay,d.getDate());
+    return fd;};
+
   try{
     if(debtor==="兩個都"){
       const others=members.filter(n=>n!==payer);
@@ -224,27 +228,44 @@ $("#entryForm").addEventListener("submit",async e=>{
     setTimeout(()=>msg.textContent="",2000);
     $("#entryForm").reset();
     $("#splitAmounts").classList.add("hidden");
-    setTimeout(refresh,1500);
-  }catch(err){
-    console.error(err); msg.textContent="送出失敗";
-  }
+    setTimeout(refresh,1200);
+  }catch(err){msg.textContent="送出失敗";}
 });
 
-// CSV 資料顯示
+/* ====== 上方金額狀態 ====== */
+async function updateFixedSummary(){
+  try {
+    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
+    const text = await res.text();
+    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const user=$("#userSelect").value;
+    const userRow = rows.find(r => r[0]===user || r[1]===user);
+    if(!userRow) return;
+    $("#overallValue").textContent = "$" + (parseFloat(userRow[2])||0).toFixed(2);
+    const st=$("#statusValue");
+    const val=parseFloat(userRow[2])||0;
+    st.textContent = val>0?"欠錢仔":val<0?"領錢仔":"你來幹嘛仔";
+    st.classList.remove("ok","warn");
+    if(val>0) st.classList.add("warn"); else if(val<0) st.classList.add("ok");
+  } catch(e){console.log(e);}
+}
+$("#userSelect").addEventListener("change",updateFixedSummary);
+
+/* ====== 讀取表格紀錄 ====== */
 async function refresh(){
   try{
     const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
     const text=await res.text();
     const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
-    renderTable(rows);
+    renderTable(rows.slice(3)); // 從第四列開始
+    updateFixedSummary();
   }catch(e){console.error(e);}
 }
 function renderTable(rows){
   const tbody=$("#dataTable tbody");tbody.innerHTML="";
-  const data=rows.slice(1).reverse();
-  data.forEach(r=>{
+  rows.reverse().forEach(r=>{
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td class="right">${r[3]}</td>`;
+    tr.innerHTML=`<td>${r[1]||""}</td><td>${r[2]||""}</td><td>${r[4]||""}</td><td>${r[5]||""}</td><td>${r[6]||""}</td><td class="right">${r[3]||""}</td>`;
     tbody.appendChild(tr);
   });
 }
