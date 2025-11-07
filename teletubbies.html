@@ -122,10 +122,8 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 </div>
 
 <script>
-/* ✅ 妳的 Google Form 提交網址 */
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
 
-/* ✅ 新的欄位代碼對照 */
 const FORM_FIELDS = {
   split: 'entry.528419311',
   paid:  'entry.2054976462',
@@ -137,97 +135,25 @@ const FORM_FIELDS = {
   dateDay:   'entry.1195304321_day',
 };
 
-/* ✅ 同一張 CSV 讀取用 */
-const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
-
 const members=["丁丁","迪西","小波"];
 const $=s=>document.querySelector(s);
 
-/* === 顯示金額與身份 === */
-async function updateFixedSummary(){
+async function debugSubmit(fd){
+  const data = [...fd.entries()].map(([k,v])=>`${k}=${v}`).join('&');
+  console.log("🔹 送出內容：", data);
   try {
-    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
-    const text = await res.text();
-    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const headers = rows[0];
-    if (!headers.includes("HUMAN")) return;
-    const user = $("#userSelect").value;
-    const hIdx = headers.indexOf("HUMAN");
-    const oIdx = headers.indexOf("OVERALL");
-    const sIdx = headers.indexOf("STATUS");
-    const found = rows.find(r => r[hIdx] === user);
-    if(found){
-      $("#overallValue").textContent = '$' + (parseFloat(found[oIdx])||0).toFixed(2);
-      const st = $("#statusValue");
-      st.textContent = found[sIdx] || '你來幹嘛仔';
-      st.classList.remove('ok','warn');
-      if(st.textContent.includes('欠')) st.classList.add('warn');
-      else if(st.textContent.includes('領')) st.classList.add('ok');
-    }
-  } catch(e){
-    console.error("summary fetch failed", e);
-  }
-}
-$("#userSelect").addEventListener("change", updateFixedSummary);
-document.addEventListener("DOMContentLoaded", updateFixedSummary);
-
-/* === 欠錢邏輯 === */
-$("#payerSelect").addEventListener("change",()=>{
-  const payer=$("#payerSelect").value;
-  const debtorSelect=$("#debtorSelect");
-  debtorSelect.innerHTML='<option value="">請選擇</option>';
-  $("#splitSelect").value="不用分";$("#splitSelect").disabled=true;
-  $("#splitAmounts").classList.add("hidden");
-  if(payer){
-    members.filter(n=>n!==payer).forEach(n=>{
-      const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
+    const res = await fetch(GOOGLE_FORM_ACTION, {
+      method: "POST",
+      body: fd,
+      mode: "no-cors"
     });
-    const both=document.createElement("option");
-    both.value="兩個都";both.textContent="兩個都";
-    debtorSelect.appendChild(both);
-  }
-});
-
-$("#debtorSelect").addEventListener("change",()=>{
-  const debtor=$("#debtorSelect").value;
-  const payer=$("#payerSelect").value;
-  const split=$("#splitSelect");
-  const splitAmounts=$("#splitAmounts");
-  if(debtor==="兩個都"){
-    split.disabled=false;
-    split.value="均分";
-    splitAmounts.classList.remove("hidden");
-    const others=members.filter(n=>n!==payer);
-    $("#person1Label").textContent=others[0]+"：";
-    $("#person2Label").textContent=others[1]+"：";
-    handleSplitChange();
-  }else{
-    split.value="不用分";
-    split.disabled=true;
-    splitAmounts.classList.add("hidden");
-  }
-});
-
-$("#splitSelect").addEventListener("change",handleSplitChange);
-function handleSplitChange(){
-  const type=$("#splitSelect").value;
-  const cost=parseFloat($("#costInput").value)||0;
-  const inputs=[$("#person1Amount"),$("#person2Amount")];
-  if(type==="均分"){
-    const half=(cost/2).toFixed(2);
-    inputs.forEach(i=>{i.value=half;i.disabled=true;});
-  }else if(type==="不要均分"){
-    inputs.forEach(i=>{i.value='';i.disabled=false;});
-  }else{
-    inputs.forEach(i=>{i.value='';i.disabled=true;});
+    console.log("✅ 已送出！(Google form 不回應內容，但已嘗試送出)", res);
+  } catch (err) {
+    console.error("❌ 傳送失敗：", err);
   }
 }
-$("#costInput").addEventListener("input",()=>{
-  const type=$("#splitSelect").value;
-  if(type==="均分") handleSplitChange();
-});
 
-/* === 寫入 Google Form === */
+/* === 寫入表單 === */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const msg=$("#msg");
@@ -265,7 +191,7 @@ $("#entryForm").addEventListener("submit",async e=>{
         fd.append(FORM_FIELDS.paid,payer);
         fd.append(FORM_FIELDS.robber,ent.robber);
         fd.append(FORM_FIELDS.split,splitType);
-        await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+        await debugSubmit(fd);
       }
     }else{
       const fd=fdBase();
@@ -274,10 +200,11 @@ $("#entryForm").addEventListener("submit",async e=>{
       fd.append(FORM_FIELDS.paid,payer);
       fd.append(FORM_FIELDS.robber,debtor);
       fd.append(FORM_FIELDS.split,splitType);
-      await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+      await debugSubmit(fd);
     }
-    msg.textContent="已新增！";
-    setTimeout(()=>msg.textContent="",2000);
+    msg.textContent="已新增！（請查看 Console）";
+    console.log("✅ 表單處理完畢");
+    setTimeout(()=>msg.textContent="",3000);
     $("#entryForm").reset();
     $("#splitAmounts").classList.add("hidden");
   }catch(err){
@@ -286,6 +213,7 @@ $("#entryForm").addEventListener("submit",async e=>{
   }
 });
 </script>
+
 
 </body>
 </html>
