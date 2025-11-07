@@ -16,16 +16,10 @@ body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
   display:flex;flex-direction:column;
   gap:6px;padding:10px 18px;
 }
-.toolbar-top{
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
-}
-.toolbar-bottom{
-  display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;
-}
+.toolbar-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.toolbar-bottom{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;}
 .toolbar-left b{font-weight:700;color:#555;}
-.toolbar-left select{
-  height:48px;padding:0 12px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;font-size:15px;
-}
+.toolbar-left select{height:48px;padding:0 12px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;font-size:15px;}
 .badge-group{display:flex;align-items:center;gap:12px 14px;}
 .badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
 .pill{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;}
@@ -42,9 +36,7 @@ td.right{text-align:right;}
 input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 
 /* 三個下拉選單變高 */
-#payerSelect,#debtorSelect,#splitSelect{
-  height:48px;font-size:16px;padding:10px 14px;line-height:1.4;
-}
+#payerSelect,#debtorSelect,#splitSelect{height:48px;font-size:16px;padding:10px 14px;line-height:1.4;}
 
 /* 頂部「你是誰」選單修正版 */
 #userSelect {
@@ -74,7 +66,6 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
   </div>
 </header>
 
-<!-- 上方 Toolbar -->
 <div class="toolbar">
   <div class="inner2">
     <div class="toolbar-top">
@@ -92,10 +83,7 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
   </div>
 </div>
 
-<!-- 主體內容 -->
 <div id="main" class="wrap">
-
-  <!-- 新增一筆 -->
   <div class="card">
     <h3 style="margin:0 0 10px 0">新增一筆</h3>
     <form id="entryForm">
@@ -111,7 +99,7 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
         </div>
         <div><label>欠錢仔 💸</label>
           <select id="debtorSelect" required>
-            <option value="">請先選擇付錢仔</option>
+            <option value="">請選擇欠錢仔</option>
           </select>
         </div>
         <div><label>分帳類型 ⚖️</label>
@@ -137,29 +125,20 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
     </form>
   </div>
 
-  <!-- 紀錄 -->
   <div class="card">
     <h3 style="margin:0 0 8px 0">紀錄</h3>
-    <div style="margin-bottom:10px;">
-      <button id="refreshBtn" class="pill">🔄 重新整理</button>
-    </div>
+    <div style="margin-bottom:10px;"><button id="refreshBtn" class="pill">🔄 重新整理</button></div>
     <table id="dataTable">
-      <thead><tr>
-        <th>日期📅</th><th>項目🥐</th><th>付錢仔👛</th><th>欠錢仔💸</th><th>分帳⚖️</th><th class="right">金額💰</th>
-      </tr></thead>
+      <thead><tr><th>日期📅</th><th>項目🥐</th><th>付錢仔👛</th><th>欠錢仔💸</th><th>分帳⚖️</th><th class="right">金額💰</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
 </div>
 
 <script>
-const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
-const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?output=csv";
-const FORM_FIELDS = {
-  splitType:'entry.528419311',item:'entry.2054976462',cost:'entry.1660109991',
-  payer:'entry.235188570',debtor:'entry.426638451',
-  dateYear:'entry.1195304321_year',dateMonth:'entry.1195304321_month',dateDay:'entry.1195304321_day'
-};
+const GOOGLE_FORM_ACTION="https://docs.google.com/forms/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
+const BASE_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?output=csv";
+const FORM_FIELDS={splitType:'entry.528419311',item:'entry.2054976462',cost:'entry.1660109991',payer:'entry.235188570',debtor:'entry.426638451',dateYear:'entry.1195304321_year',dateMonth:'entry.1195304321_month',dateDay:'entry.1195304321_day'};
 const members=["丁丁","迪西","小波"],$=s=>document.querySelector(s);
 
 /* 上方金額顯示 */
@@ -181,10 +160,10 @@ async function updateTop(){
 }
 $("#userSelect").addEventListener("change",updateTop);
 
-/* 欠錢人連動 + 分帳控制（支援手機隱藏不用分） */
+/* 欠錢人連動 + 分帳控制 */
 $("#payerSelect").addEventListener("change",()=>{
   const payer=$("#payerSelect").value,debtor=$("#debtorSelect");
-  debtor.innerHTML='<option value="">請選擇</option>';
+  debtor.innerHTML='<option value="">請選擇欠錢仔</option>';
   $("#splitSelect").value="不用分";$("#splitSelect").disabled=true;
   $("#splitAmounts").classList.add("hidden");
   if(payer){
@@ -195,35 +174,21 @@ $("#payerSelect").addEventListener("change",()=>{
   }
 });
 
+/* 兩個都：手機支援隱藏「不用分」 */
 $("#debtorSelect").addEventListener("change",()=>{
   const val=$("#debtorSelect").value,payer=$("#payerSelect").value,cost=parseFloat($("#costInput").value||0);
   if(val==="兩個都"){
-    $("#splitSelect").disabled=false;
-    $("#splitSelect").value="均分";
-    $("#splitAmounts").classList.remove("hidden");
+    $("#splitSelect").disabled=false;$("#splitSelect").value="均分";$("#splitAmounts").classList.remove("hidden");
     const others=members.filter(x=>x!==payer);
-    $("#person1Label").textContent=others[0]+"：";
-    $("#person2Label").textContent=others[1]+"：";
-    const half=(cost/2).toFixed(2);
-    $("#person1Amount").value=half;$("#person2Amount").value=half;
+    $("#person1Label").textContent=others[0]+"：";$("#person2Label").textContent=others[1]+"：";
+    const half=(cost/2).toFixed(2);$("#person1Amount").value=half;$("#person2Amount").value=half;
     $("#person1Amount").readOnly=true;$("#person2Amount").readOnly=true;
-
-    // ✅ 手機版：移除「不用分」選項
     const noSplit=[...$("#splitSelect").options].find(o=>o.value==="不用分");
     if(noSplit) $("#splitSelect").removeChild(noSplit);
   }else{
-    $("#splitSelect").disabled=true;
-    $("#splitSelect").value="不用分";
-    $("#splitAmounts").classList.add("hidden");
-
-    // ✅ 若「不用分」被移除，重新加回
+    $("#splitSelect").disabled=true;$("#splitSelect").value="不用分";$("#splitAmounts").classList.add("hidden");
     const exist=[...$("#splitSelect").options].some(o=>o.value==="不用分");
-    if(!exist){
-      const opt=document.createElement("option");
-      opt.value="不用分";
-      opt.textContent="不用分";
-      $("#splitSelect").prepend(opt);
-    }
+    if(!exist){const opt=document.createElement("option");opt.value="不用分";opt.textContent="不用分";$("#splitSelect").prepend(opt);}
   }
 });
 
@@ -242,7 +207,7 @@ $("#splitSelect").addEventListener("change",()=>{
   }else{$("#person1Amount").readOnly=false;$("#person2Amount").readOnly=false;}
 });
 
-/* 表單送出與載入紀錄（保持原樣） */
+/* 表單送出與刷新 */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();const msg=$("#msg");msg.textContent="送出中…";
   const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
@@ -299,3 +264,6 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const t=new Date();$("#dateInput").value=t.toISOString().split('T')[0];
   await refresh();
 });
+</script>
+</body>
+</html>
