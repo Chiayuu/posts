@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>天線寶寶討債集團</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="stylesheet" href="assets/css/main.css" />
 <style>
 :root{ --radius:12px; --gap:14px; }
 body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
@@ -26,8 +27,8 @@ th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;}
 td.right{text-align:right;}
 </style>
 </head>
-<body>
-
+<body class="is-preload">
+<!-- Header -->
 <header id="header">
   <div class="inner">
     <h1><strong>CHIAYU's WEBSITE</strong></h1>
@@ -35,6 +36,7 @@ td.right{text-align:right;}
   </div>
 </header>
 
+<!-- Toolbar -->
 <div class="toolbar">
   <div class="inner2">
     <div class="toolbar-left">
@@ -157,58 +159,107 @@ $("#debtorSelect").addEventListener("change",()=>{
   }
 });
 
-/* 上方金額 */
+/* 上方金額讀取 */
 async function updateTop(){
   try{
     const res = await fetch(BASE_CSV_URL+"&cb="+Date.now());
     const text = await res.text();
     const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
     const data = rows.slice(3);
-    const user = $("#userSelect").value;
-    const found = data.find(r=>r[7]===user);
+    const user=$("#userSelect").value;
+    const found=data.find(r=>r[7]===user);
     if(found){
       $("#overallValue").textContent = '$' + found[8];
       $("#statusValue").textContent = found[9];
+    } else {
+      $("#overallValue").textContent = '$0.00';
+      $("#statusValue").textContent = '—';
     }
   }catch(e){console.error(e);}
 }
-$("#userSelect").addEventListener("change", updateTop);
+$("#userSelect").addEventListener("change",updateTop);
 
 /* 表單送出 */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const msg=$("#msg"); msg.textContent="送出中…";
   const d=new Date($("#dateInput").value);
-  const fd=new FormData();
-  fd.append(FORM_FIELDS.dateYear,d.getFullYear());
-  fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
-  fd.append(FORM_FIELDS.dateDay,d.getDate());
-  fd.append(FORM_FIELDS.item,$("#itemInput").value);
-  fd.append(FORM_FIELDS.cost,$("#costInput").value);
-  fd.append(FORM_FIELDS.payer,$("#payerSelect").value);
-  fd.append(FORM_FIELDS.debtor,$("#debtorSelect").value);
-  fd.append(FORM_FIELDS.splitType,$("#splitSelect").value);
-  console.log("🟡送出內容：", [...fd.entries()]);
-  try{
-    await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
-    msg.textContent="✅ 已新增！";
-    setTimeout(()=>msg.textContent="",2000);
-    $("#entryForm").reset();
-    $("#splitAmounts").classList.add("hidden");
-    setTimeout(refresh,1200);
-  }catch(e){
-    console.error(e);
-    msg.textContent="❌ 送出失敗";
+  const fdBase={
+    dateYear:d.getFullYear(),
+    dateMonth:d.getMonth()+1,
+    dateDay:d.getDate(),
+    item:$("#itemInput").value,
+    cost:parseFloat($("#costInput").value),
+    payer:$("#payerSelect").value,
+    debtor:$("#debtorSelect").value,
+    splitType:$("#splitSelect").value
+  };
+
+  // 兩個都 → 送兩筆
+  const promises=[];
+  if(fdBase.debtor==="兩個都"){
+    const others=members.filter(x=>x!==fdBase.payer);
+    if(fdBase.splitType==="均分"){
+      const half=fdBase.cost/2;
+      others.forEach(name=>{
+        const fd=new FormData();
+        fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
+        fd.append(FORM_FIELDS.dateMonth,fdBase.dateMonth);
+        fd.append(FORM_FIELDS.dateDay,fdBase.dateDay);
+        fd.append(FORM_FIELDS.item,fdBase.item);
+        fd.append(FORM_FIELDS.cost,half);
+        fd.append(FORM_FIELDS.payer,fdBase.payer);
+        fd.append(FORM_FIELDS.debtor,name);
+        fd.append(FORM_FIELDS.splitType,"均分");
+        promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
+      });
+      console.log("🟢 已拆成兩筆送出 (均分)");
+    } else {
+      const a=parseFloat($("#person1Amount").value||0);
+      const b=parseFloat($("#person2Amount").value||0);
+      [a,b].forEach((amt,i)=>{
+        const fd=new FormData();
+        fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
+        fd.append(FORM_FIELDS.dateMonth,fdBase.dateMonth);
+        fd.append(FORM_FIELDS.dateDay,fdBase.dateDay);
+        fd.append(FORM_FIELDS.item,fdBase.item);
+        fd.append(FORM_FIELDS.cost,amt);
+        fd.append(FORM_FIELDS.payer,fdBase.payer);
+        fd.append(FORM_FIELDS.debtor,others[i]);
+        fd.append(FORM_FIELDS.splitType,"不要均分");
+        promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
+      });
+      console.log("🟢 已拆成兩筆送出 (自訂金額)");
+    }
+  } else {
+    const fd=new FormData();
+    fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
+    fd.append(FORM_FIELDS.dateMonth,fdBase.dateMonth);
+    fd.append(FORM_FIELDS.dateDay,fdBase.dateDay);
+    fd.append(FORM_FIELDS.item,fdBase.item);
+    fd.append(FORM_FIELDS.cost,fdBase.cost);
+    fd.append(FORM_FIELDS.payer,fdBase.payer);
+    fd.append(FORM_FIELDS.debtor,fdBase.debtor);
+    fd.append(FORM_FIELDS.splitType,fdBase.splitType);
+    promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
   }
+
+  try{
+    await Promise.all(promises);
+    msg.textContent="✅ 已新增！";
+    $("#entryForm").reset();$("#splitAmounts").classList.add("hidden");
+    setTimeout(()=>msg.textContent="",2000);
+    setTimeout(refresh,1000);
+  }catch(e){console.error(e);msg.textContent="❌ 送出失敗";}
 });
 
-/* 紀錄載入 */
+/* 載入紀錄 */
 async function refresh(){
   try{
-    const res = await fetch(BASE_CSV_URL+"&cb="+Date.now());
-    const text = await res.text();
-    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const data = rows.slice(3).reverse();
+    const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
+    const text=await res.text();
+    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const data=rows.slice(3).reverse();
     const tbody=$("#dataTable tbody");
     tbody.innerHTML="";
     data.forEach(r=>{
@@ -219,8 +270,8 @@ async function refresh(){
     updateTop();
   }catch(e){console.error(e);}
 }
-$("#refreshBtn").addEventListener("click", refresh);
-document.addEventListener("DOMContentLoaded", refresh);
+$("#refreshBtn").addEventListener("click",refresh);
+document.addEventListener("DOMContentLoaded",refresh);
 </script>
 </body>
 </html>
