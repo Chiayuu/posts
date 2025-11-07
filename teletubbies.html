@@ -9,8 +9,7 @@
 :root{ --radius:12px; --gap:14px; }
 body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
 .wrap{max-width:980px;margin:0 auto;padding:18px;}
-.card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
-.section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
+.card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);margin-bottom:14px;}
 .toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
 .toolbar .inner2{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;}
 .toolbar-left{display:flex;align-items:center;gap:10px;}
@@ -22,6 +21,10 @@ body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
 .pill.ok{background:#e9f7ef;border-color:#d4efdf}
 .pill.warn{background:#fff6e6;border-color:#ffe0a3}
 .hidden{display:none;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+form label{display:block;margin:.25rem 0 .35rem}
+input,select,button{width:100%;padding:14px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:16px}
+button.primary{background:#111;color:#fff;border-color:#111;cursor:pointer}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;}
 td.right{text-align:right;}
@@ -30,7 +33,7 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 </head>
 <body class="is-preload">
 
-<!-- Header -->
+<!-- Header（保留妳的 template） -->
 <header id="header">
   <div class="inner">
     <h1><strong>CHIAYU's WEBSITE</strong></h1>
@@ -38,7 +41,7 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
   </div>
 </header>
 
-<!-- Toolbar -->
+<!-- Toolbar 顯示人物與金額狀態 -->
 <div class="toolbar">
   <div class="inner2">
     <div class="toolbar-left">
@@ -57,250 +60,361 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 </div>
 
 <div id="main" class="wrap">
-  <section id="one">
-    <div class="section">
-      <div class="card">
-        <h3 style="margin-top:0">新增一筆</h3>
-        <form id="entryForm">
-          <div class="grid-2">
-            <div><label>日期📅</label><input type="date" id="dateInput" required /></div>
-            <div><label>金額💰</label><input type="number" id="costInput" step="0.01" inputmode="decimal" required /></div>
-            <div><label>項目🥐</label><input type="text" id="itemInput" required /></div>
-            <div><label>付錢的人 👛</label>
-              <select id="payerSelect" required>
-                <option value="">請選擇</option>
-                <option value="丁丁">丁丁</option>
-                <option value="迪西">迪西</option>
-                <option value="小波">小波</option>
-              </select>
-            </div>
-            <div><label>欠錢的人 💸</label>
-              <select id="debtorSelect" required>
-                <option value="">請先選擇付錢的人</option>
-              </select>
-            </div>
-            <div><label>分帳類型 ⚖️</label>
-              <select id="splitSelect" required disabled>
-                <option value="不用分">不用分</option>
-                <option value="均分">均分</option>
-                <option value="不要均分">不要均分</option>
-              </select>
-            </div>
-          </div>
-          <div id="splitAmounts" class="hidden" style="margin-top:10px;">
-            <div><label id="person1Label"></label><input type="number" id="person1Amount" step="0.01" /></div>
-            <div><label id="person2Label"></label><input type="number" id="person2Amount" step="0.01" /></div>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:10px;">
-            <button type="submit" class="primary" style="flex:1;background:#111;color:#fff;">➕ 新增</button>
-            <span id="msg" class="muted" style="align-self:center;color:#666"></span>
-          </div>
-        </form>
+  <!-- 新增一筆：獨立卡片 -->
+  <div class="card">
+    <h3 style="margin:0 0 10px 0">新增一筆</h3>
+    <form id="entryForm">
+      <div class="grid-2">
+        <div>
+          <label>日期📅</label>
+          <input type="date" id="dateInput" required />
+        </div>
+        <div>
+          <label>金額💰</label>
+          <input type="number" id="costInput" step="0.01" inputmode="decimal" required />
+        </div>
+        <div style="grid-column:1 / -1">
+          <label>項目🥐</label>
+          <input type="text" id="itemInput" required />
+        </div>
+        <div>
+          <label>付錢的人 👛</label>
+          <select id="payerSelect" required>
+            <option value="">請選擇</option>
+            <option value="丁丁">丁丁</option>
+            <option value="迪西">迪西</option>
+            <option value="小波">小波</option>
+          </select>
+        </div>
+        <div>
+          <label>欠錢的人 💸</label>
+          <select id="debtorSelect" required>
+            <option value="">請先選擇付錢的人</option>
+          </select>
+        </div>
+        <div>
+          <label>分帳類型 ⚖️</label>
+          <select id="splitSelect" required disabled>
+            <!-- 兩個都時會隱藏「不用分」，只保留 均分 / 不要均分 -->
+            <option value="不用分">不用分</option>
+            <option value="均分">均分</option>
+            <option value="不要均分">不要均分</option>
+          </select>
+        </div>
       </div>
 
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 style="margin:0">紀錄</h3>
-          <button id="refreshBtn" class="pill">🔄 重新整理</button>
+      <!-- 兩個都的細分金額 -->
+      <div id="splitAmounts" class="hidden" style="margin-top:10px;">
+        <div class="grid-2">
+          <div>
+            <label id="person1Label"></label>
+            <input type="number" id="person1Amount" step="0.01" />
+          </div>
+          <div>
+            <label id="person2Label"></label>
+            <input type="number" id="person2Amount" step="0.01" />
+          </div>
         </div>
-        <table id="dataTable">
-          <thead><tr><th>日期📅</th><th>項目🥐</th><th>付錢人👛</th><th>欠錢人💸</th><th>分帳⚖️</th><th class="right">金額💰</th></tr></thead>
-          <tbody></tbody>
-        </table>
       </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button type="submit" class="primary">➕ 新增</button>
+        <span id="msg" style="align-self:center;color:#666"></span>
+      </div>
+    </form>
+  </div>
+
+  <!-- 紀錄：獨立卡片（在新增一筆下方） -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0">紀錄</h3>
+      <button id="refreshBtn" class="pill">🔄 重新整理</button>
     </div>
-  </section>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>日期📅</th><th>項目🥐</th><th>付錢人👛</th>
+          <th>欠錢人💸</th><th>分帳⚖️</th><th class="right">金額💰</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
+/* ====== 設定（妳的表單/資料來源） ====== */
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?output=csv";
+
+/* 表單欄位對照（依妳提供的 entry.*） */
 const FORM_FIELDS = {
-  splitType: 'entry.528419311',
-  item: 'entry.2054976462',
-  cost: 'entry.1660109991',
-  payer: 'entry.235188570',
-  debtor: 'entry.426638451',
-  dateYear: 'entry.1195304321_year',
-  dateMonth: 'entry.1195304321_month',
-  dateDay: 'entry.1195304321_day'
+  splitType: 'entry.528419311',           // 分帳類型
+  item: 'entry.2054976462',               // 項目
+  cost: 'entry.1660109991',               // 金額
+  payer: 'entry.235188570',               // 付錢的人
+  debtor: 'entry.426638451',              // 欠錢的人
+  dateYear: 'entry.1195304321_year',      // 日期-年（Google Form 日期元件的3格）
+  dateMonth:'entry.1195304321_month',
+  dateDay:  'entry.1195304321_day'
 };
-const members=["丁丁","迪西","小波"];
-const $=s=>document.querySelector(s);
 
-/* 欠錢選單連動 */
-$("#payerSelect").addEventListener("change",()=>{
-  const payer=$("#payerSelect").value;
-  const debtor=$("#debtorSelect");
-  debtor.innerHTML='<option value="">請選擇</option>';
-  $("#splitSelect").value="不用分";
-  $("#splitSelect").disabled=true;
-  $("#splitAmounts").classList.add("hidden");
-  if(payer){
-    members.filter(n=>n!==payer).forEach(n=>{
-      const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtor.appendChild(opt);
-    });
-    const both=document.createElement("option");
-    both.value="兩個都";both.textContent="兩個都";debtor.appendChild(both);
-  }
-});
+const members = ["丁丁","迪西","小波"];
+const $ = s => document.querySelector(s);
 
-/* 分帳選項控制 */
-$("#debtorSelect").addEventListener("change",()=>{
-  const val=$("#debtorSelect").value;
-  const payer=$("#payerSelect").value;
-  const cost=parseFloat($("#costInput").value||0);
-  if(val==="兩個都"){
-    $("#splitSelect").disabled=false;
-    $("#splitSelect").value="均分";
-    $("#splitAmounts").classList.remove("hidden");
-    const others=members.filter(x=>x!==payer);
-    $("#person1Label").textContent=others[0]+"：";
-    $("#person2Label").textContent=others[1]+"：";
-    const half=(cost/2).toFixed(2);
-    $("#person1Amount").value=half;
-    $("#person2Amount").value=half;
-    $("#person1Amount").readOnly=true;
-    $("#person2Amount").readOnly=true;
-  } else {
-    $("#splitSelect").value="不用分";
-    $("#splitSelect").disabled=true;
-    $("#splitAmounts").classList.add("hidden");
-  }
-});
-
-/* 當金額變動時，若是均分則自動更新 */
-$("#costInput").addEventListener("input",()=>{
-  if($("#splitSelect").value==="均分" && $("#debtorSelect").value==="兩個都"){
-    const half=(parseFloat($("#costInput").value||0)/2).toFixed(2);
-    $("#person1Amount").value=half;
-    $("#person2Amount").value=half;
-  }
-});
-
-/* 切換分帳類型時解鎖 */
-$("#splitSelect").addEventListener("change",()=>{
-  if($("#splitSelect").value==="均分"){
-    $("#person1Amount").readOnly=true;
-    $("#person2Amount").readOnly=true;
-  } else {
-    $("#person1Amount").readOnly=false;
-    $("#person2Amount").readOnly=false;
-  }
-});
-
-/* 上方金額 */
+/* ====== 上方金額僅做「讀取」：第4列開始，H=7, I=8, J=9 ====== */
 async function updateTop(){
   try{
-    const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
-    const text=await res.text();
-    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const user=$("#userSelect").value;
-    const data=rows.slice(3);
-    const found=data.find(r=>r[8]===user);
+    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
+    const text = await res.text();
+    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const user = $("#userSelect").value;
+    const data = rows.slice(3); // 從第4列開始
+    const found = data.find(r => r[7] === user);
     if(found){
-      $("#overallValue").textContent='$'+found[9];
-      $("#statusValue").textContent=found[10];
-    } else {
-      $("#overallValue").textContent='$0.00';
-      $("#statusValue").textContent='—';
+      $("#overallValue").textContent = '$' + (found[8] || '0.00');
+      const st = found[9] || '—';
+      $("#statusValue").textContent = st;
+      const pill = $("#statusValue");
+      pill.classList.remove('ok','warn');
+      if(/欠/.test(st)) pill.classList.add('warn');
+      else if(/領/.test(st)) pill.classList.add('ok');
+    }else{
+      $("#overallValue").textContent = '$0.00';
+      $("#statusValue").textContent = '—';
     }
-  }catch(e){console.error(e);}
+  }catch(e){ console.error("Top summary read error:", e); }
 }
-$("#userSelect").addEventListener("change",updateTop);
+$("#userSelect").addEventListener("change", updateTop);
 
-/* 表單送出 */
-$("#entryForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const msg=$("#msg"); msg.textContent="送出中…";
-  const d=new Date($("#dateInput").value);
-  const fdBase={
-    dateYear:d.getFullYear(),
-    dateMonth:d.getMonth()+1,
-    dateDay:d.getDate(),
-    item:$("#itemInput").value,
-    cost:parseFloat($("#costInput").value),
-    payer:$("#payerSelect").value,
-    debtor:$("#debtorSelect").value,
-    splitType:$("#splitSelect").value
-  };
-  const promises=[];
-  if(fdBase.debtor==="兩個都"){
-    const others=members.filter(x=>x!==fdBase.payer);
-    if(fdBase.splitType==="均分"){
-      const half=fdBase.cost/2;
-      others.forEach(name=>{
-        const fd=new FormData();
-        fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
-        fd.append(FORM_FIELDS.dateMonth,fdBase.dateMonth);
-        fd.append(FORM_FIELDS.dateDay,fdBase.dateDay);
-        fd.append(FORM_FIELDS.item,fdBase.item);
-        fd.append(FORM_FIELDS.cost,half);
-        fd.append(FORM_FIELDS.payer,fdBase.payer);
-        fd.append(FORM_FIELDS.debtor,name);
-        fd.append(FORM_FIELDS.splitType,"均分");
-        promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
-      });
-      console.log("🟢 已拆成兩筆送出 (均分)");
-    } else {
-      const a=parseFloat($("#person1Amount").value||0);
-      const b=parseFloat($("#person2Amount").value||0);
-      const others=members.filter(x=>x!==fdBase.payer);
-      [a,b].forEach((amt,i)=>{
-        const fd=new FormData();
-        fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
-        fd.append(FORM_FIELDS.dateMonth,fdBase.dateMonth);
-        fd.append(FORM_FIELDS.dateDay,fdBase.dateDay);
-        fd.append(FORM_FIELDS.item,fdBase.item);
-        fd.append(FORM_FIELDS.cost,amt);
-        fd.append(FORM_FIELDS.payer,fdBase.payer);
-        fd.append(FORM_FIELDS.debtor,others[i]);
-        fd.append(FORM_FIELDS.splitType,"不要均分");
-        promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
-      });
-      console.log("🟢 已拆成兩筆送出 (自訂金額)");
-    }
-  } else {
-    const fd=new FormData();
-    fd.append(FORM_FIELDS.dateYear,fdBase.dateYear);
-    fd.append(FORM_FIELDS.dateMonth,fdBase.dateMonth);
-    fd.append(FORM_FIELDS.dateDay,fdBase.dateDay);
-    fd.append(FORM_FIELDS.item,fdBase.item);
-    fd.append(FORM_FIELDS.cost,fdBase.cost);
-    fd.append(FORM_FIELDS.payer,fdBase.payer);
-    fd.append(FORM_FIELDS.debtor,fdBase.debtor);
-    fd.append(FORM_FIELDS.splitType,fdBase.splitType);
-    promises.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
+/* ====== 欠錢選單連動 + 分帳類型控制 ====== */
+$("#payerSelect").addEventListener("change", ()=>{
+  const payer = $("#payerSelect").value;
+  const debtor = $("#debtorSelect");
+  debtor.innerHTML = '<option value="">請選擇</option>';
+  $("#splitSelect").value = "不用分";
+  $("#splitSelect").disabled = true;
+  $("#splitAmounts").classList.add("hidden");
+
+  if(payer){
+    members.filter(n=>n!==payer).forEach(n=>{
+      const opt=document.createElement("option");
+      opt.value=n; opt.textContent=n;
+      debtor.appendChild(opt);
+    });
+    const both=document.createElement("option");
+    both.value="兩個都"; both.textContent="兩個都";
+    debtor.appendChild(both);
   }
-  try{
-    await Promise.all(promises);
-    msg.textContent="✅ 已新增！";
-    $("#entryForm").reset();
-    $("#splitAmounts").classList.add("hidden");
-    setTimeout(()=>msg.textContent="",2000);
-    await refresh(); // ✅ 送出後立即刷新
-  }catch(e){console.error(e);msg.textContent="❌ 送出失敗";}
 });
 
-/* 重新整理表格 */
+$("#debtorSelect").addEventListener("change", ()=>{
+  const val = $("#debtorSelect").value;
+  const payer = $("#payerSelect").value;
+  const cost = parseFloat($("#costInput").value||0);
+
+  if(val === "兩個都"){
+    // 兩個都 → 分帳類型只留「均分/不要均分」
+    $("#splitSelect").disabled = false;
+    // 預設顯示均分
+    $("#splitSelect").value = "均分";
+    // 顯示兩金額欄
+    $("#splitAmounts").classList.remove("hidden");
+
+    // 兩位受款人標籤
+    const others = members.filter(x => x !== payer);
+    $("#person1Label").textContent = others[0] + "：";
+    $("#person2Label").textContent = others[1] + "：";
+
+    // 均分：自動算並鎖定
+    const half = (cost/2).toFixed(2);
+    $("#person1Amount").value = half;
+    $("#person2Amount").value = half;
+    $("#person1Amount").readOnly = true;
+    $("#person2Amount").readOnly = true;
+
+    // 把「不用分」選項隱藏
+    [...$("#splitSelect").options].forEach(opt=>{
+      if(opt.value==="不用分") opt.hidden = true;
+    });
+
+  }else{
+    // 單一欠款人 → 「不用分」強制、隱藏兩金額欄
+    $("#splitSelect").disabled = true;
+    $("#splitSelect").value = "不用分";
+    $("#splitAmounts").classList.add("hidden");
+    // 顯示回「不用分」選項（避免下一次兩個都時無法切換）
+    [...$("#splitSelect").options].forEach(opt=>{
+      if(opt.value==="不用分") opt.hidden = false;
+    });
+  }
+});
+
+/* 金額變動：若是均分 & 兩個都 → 重新計算並維持鎖定 */
+$("#costInput").addEventListener("input", ()=>{
+  if($("#debtorSelect").value === "兩個都" && $("#splitSelect").value === "均分"){
+    const half = (parseFloat($("#costInput").value||0)/2).toFixed(2);
+    $("#person1Amount").value = half;
+    $("#person2Amount").value = half;
+  }
+});
+
+/* 切換分帳類型：均分→鎖定；不要均分→解鎖 */
+$("#splitSelect").addEventListener("change", ()=>{
+  if($("#debtorSelect").value !== "兩個都") return; // 單人時不處理
+  const type = $("#splitSelect").value;
+  if(type === "均分"){
+    const half = (parseFloat($("#costInput").value||0)/2).toFixed(2);
+    $("#person1Amount").value = half;
+    $("#person2Amount").value = half;
+    $("#person1Amount").readOnly = true;
+    $("#person2Amount").readOnly = true;
+  }else if(type === "不要均分"){
+    $("#person1Amount").readOnly = false;
+    $("#person2Amount").readOnly = false;
+  }
+});
+
+/* ====== 表單送出：含防呆 & 兩筆拆單 ====== */
+$("#entryForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const msg = $("#msg"); msg.textContent = "送出中…";
+
+  const dateStr = $("#dateInput").value;
+  if(!dateStr){ msg.textContent = "請選日期"; return; }
+  const d = new Date(dateStr);
+
+  const itemBase = $("#itemInput").value.trim();
+  const cost = parseFloat($("#costInput").value);
+  const payer = $("#payerSelect").value;
+  const debtor = $("#debtorSelect").value;
+  let splitType = $("#splitSelect").value;
+
+  if(!payer || !debtor){ msg.textContent="請選擇付錢人與欠錢人"; return; }
+  if(Number.isNaN(cost) || cost <= 0){ msg.textContent="請輸入正確的金額"; return; }
+
+  // 兩個都 → 防呆：不得有「不用分」，且不要均分時兩金額相加必須等於總金額
+  const isBoth = debtor === "兩個都";
+  const others = isBoth ? members.filter(x => x !== payer) : [];
+
+  if(isBoth){
+    if(splitType === "不用分"){
+      alert("兩個都的情況下，分帳類型不能選「不用分」。");
+      msg.textContent="請調整分帳類型"; return;
+    }
+    if(splitType === "不要均分"){
+      const a = parseFloat($("#person1Amount").value||0);
+      const b = parseFloat($("#person2Amount").value||0);
+      const sum = (a + b);
+      const diff = Math.abs(sum - cost);
+      if(diff > 0.009){ // 容忍 1 分錢內的誤差
+        alert(`兩個金額相加必須等於總金額。\n目前相加：${sum.toFixed(2)}，總金額：${cost.toFixed(2)}`);
+        msg.textContent="金額不相等，請修正"; return;
+      }
+    }
+  }
+
+  // 共用：建立基礎 FormData
+  const mkFD = () =>{
+    const fd = new FormData();
+    fd.append(FORM_FIELDS.dateYear,  d.getFullYear());
+    fd.append(FORM_FIELDS.dateMonth, d.getMonth()+1);
+    fd.append(FORM_FIELDS.dateDay,   d.getDate());
+    return fd;
+  };
+
+  const posts = [];
+  try{
+    if(isBoth){
+      // 兩個都 → 送兩筆，並在 item 後面加上 (SPLIT)
+      const item = itemBase + " (SPLIT)";
+      if(splitType === "均分"){
+        const half = (cost/2);
+        others.forEach(name=>{
+          const fd = mkFD();
+          fd.append(FORM_FIELDS.item, item);
+          fd.append(FORM_FIELDS.cost, half);
+          fd.append(FORM_FIELDS.payer, payer);
+          fd.append(FORM_FIELDS.debtor, name);
+          fd.append(FORM_FIELDS.splitType, "均分");
+          posts.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
+        });
+      }else{ // 不要均分
+        const a = parseFloat($("#person1Amount").value||0);
+        const b = parseFloat($("#person2Amount").value||0);
+        [a,b].forEach((amt,i)=>{
+          const fd = mkFD();
+          fd.append(FORM_FIELDS.item, item);
+          fd.append(FORM_FIELDS.cost, amt);
+          fd.append(FORM_FIELDS.payer, payer);
+          fd.append(FORM_FIELDS.debtor, others[i]);
+          fd.append(FORM_FIELDS.splitType, "不要均分");
+          posts.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
+        });
+      }
+    }else{
+      // 單一欠款人
+      const fd = mkFD();
+      fd.append(FORM_FIELDS.item, itemBase);
+      fd.append(FORM_FIELDS.cost, cost);
+      fd.append(FORM_FIELDS.payer, payer);
+      fd.append(FORM_FIELDS.debtor, debtor);
+      fd.append(FORM_FIELDS.splitType, "不用分");
+      posts.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
+    }
+
+    await Promise.all(posts);
+    msg.textContent = "✅ 已新增！";
+    $("#entryForm").reset();
+    $("#splitAmounts").classList.add("hidden");
+    setTimeout(()=>msg.textContent="",1800);
+    await refresh(); // 送出後立即刷新（含上方金額）
+  }catch(err){
+    console.error(err);
+    msg.textContent = "❌ 送出失敗";
+  }
+});
+
+/* ====== 紀錄載入（第4列起，最新在上） ====== */
 async function refresh(){
   try{
-    console.log("🔄 正在重新載入資料...");
-    const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
-    const text=await res.text();
-    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const tbody=$("#dataTable tbody");
-    tbody.innerHTML="";
-    rows.slice(3).reverse().forEach(r=>{
+    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
+    const text = await res.text();
+    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const data = rows.slice(3).reverse();
+    const tbody = $("#dataTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(r=>{
       const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td class="right">${r[3]}</td>`;
+      // 0:Timestamp,1:Date,2:Item,3:Cost,4:Payer,5:Debtor,6:SplitType,7:HUMAN,8:OVERALL,9:STATUS ...
+      tr.innerHTML = `
+        <td>${r[1]||''}</td>
+        <td>${r[2]||''}</td>
+        <td>${r[4]||''}</td>
+        <td>${r[5]||''}</td>
+        <td>${r[6]||''}</td>
+        <td class="right">${r[3]||''}</td>
+      `;
       tbody.appendChild(tr);
     });
     await updateTop();
-  }catch(e){console.error("❌ 載入失敗",e);}
+  }catch(e){
+    console.error("refresh error:", e);
+  }
 }
-$("#refreshBtn").addEventListener("click",refresh);
-document.addEventListener("DOMContentLoaded",refresh);
+$("#refreshBtn").addEventListener("click", refresh);
+
+/* 初始：選單預設丁丁 → 載入金額與紀錄 */
+document.addEventListener("DOMContentLoaded", async ()=>{
+  // 預設把日期填今天（小加分）
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+  $("#dateInput").value = `${yyyy}-${mm}-${dd}`;
+
+  await refresh();
+});
 </script>
 </body>
 </html>
