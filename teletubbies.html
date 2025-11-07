@@ -22,26 +22,32 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
   display:flex;align-items:center;gap:10px;min-width:0;
 }
 .toolbar-left b{font-weight:700;color:#555;}
+.toolbar-left label{
+  font-weight:500;
+  color:#555;
+}
+.toolbar-left select{
+  height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid #e6e6e6;
+  background:#f7f7f7;
+  font-weight:600;
+  font-size:15px;
+  line-height:1;
+  appearance:none;
+}
 .badge-group{display:flex;align-items:center;gap:12px 14px;}
 .badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.pill{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;line-height:1;white-space:nowrap;width:max-content;}
+.pill{
+  display:inline-flex;align-items:center;height:36px;
+  padding:0 14px;border-radius:10px;
+  border:1px solid #e6e6e6;background:#f7f7f7;
+  font-weight:600;line-height:1;white-space:nowrap;width:max-content;
+}
 .pill.ok{background:#e9f7ef;border-color:#d4efdf}
 .pill.warn{background:#fff6e6;border-color:#ffe0a3}
-form label{display:block;margin:.5rem 0 .25rem}
-input,select,button{width:100%;padding:14px;border:1px solid #ddd;border-radius:10px;font-size:16px;background:#fff}
-button{cursor:pointer;background:#f5f5f5}
-button.primary{background:#111;color:#fff;border-color:#111}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-.muted{color:#666}
-.table-wrap{margin-top:12px}
-table.responsive{min-width:560px;width:100%;border-collapse:collapse}
-th,td{padding:.65rem;border-bottom:1px solid #eee;text-align:left}
-td.right,th.right{text-align:right}
-@media(max-width:880px){
-  .section{grid-template-columns:1fr}
-  .grid-2{grid-template-columns:1fr}
-  .wrap{padding:14px}
-  .toolbar .inner2{flex-wrap:wrap;justify-content:flex-start}
+
 }
 </style>
 </head>
