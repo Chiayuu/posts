@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>天線寶寶討債集團</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="stylesheet" href="assets/css/main.css" />
 <style>
 :root{ --radius:12px; --gap:14px; }
 body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
@@ -45,7 +46,7 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 .hidden{display:none;}
 </style>
 </head>
-<body>
+<body class="is-preload">
 
 <header id="header">
   <div class="inner">
@@ -54,19 +55,20 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
   </div>
 </header>
 
+<!-- Toolbar 一列排列 -->
 <div class="toolbar">
   <div class="inner2">
     <div class="toolbar-left">
       <b>天線寶寶討債集團</b>
       <select id="userSelect">
-        <option value="丁丁">丁丁</option>
+        <option value="丁丁" selected>丁丁</option>
         <option value="迪西">迪西</option>
         <option value="小波">小波</option>
       </select>
     </div>
     <div class="badge-group">
-      <div class="badge">金額 <span id="overallValue" class="pill warn">$0.00</span></div>
-      <div class="badge">什麼仔 <span id="statusValue" class="pill warn">你來幹嘛仔</span></div>
+      <div class="badge">金額 <span id="overallValue" class="pill warn">—</span></div>
+      <div class="badge">什麼仔 <span id="statusValue" class="pill warn">Loading…</span></div>
     </div>
   </div>
 </div>
@@ -103,6 +105,7 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
             </div>
           </div>
 
+          <!-- 動態出現的兩人金額欄 -->
           <div id="splitAmounts" class="hidden" style="margin-top:10px;">
             <div><label id="person1Label"></label><input type="number" id="person1Amount" step="0.01" /></div>
             <div><label id="person2Label"></label><input type="number" id="person2Amount" step="0.01" /></div>
