@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <title>天線寶寶討債集團</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<link rel="stylesheet" href="assets/css/main.css" />
 <style>
 :root{ --radius:12px; --gap:14px; }
 body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
@@ -22,10 +21,6 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
   display:flex;align-items:center;gap:10px;min-width:0;
 }
 .toolbar-left b{font-weight:700;color:#555;}
-.toolbar-left label{
-  font-weight:500;
-  color:#555;
-}
 .toolbar-left select{
   height:36px;
   padding:0 12px;
@@ -47,11 +42,10 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 }
 .pill.ok{background:#e9f7ef;border-color:#d4efdf}
 .pill.warn{background:#fff6e6;border-color:#ffe0a3}
-
-}
+.hidden{display:none;}
 </style>
 </head>
-<body class="is-preload">
+<body>
 
 <header id="header">
   <div class="inner">
@@ -60,7 +54,6 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
   </div>
 </header>
 
-<!-- Toolbar 一列排列 -->
 <div class="toolbar">
   <div class="inner2">
     <div class="toolbar-left">
@@ -73,7 +66,7 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
     </div>
     <div class="badge-group">
       <div class="badge">金額 <span id="overallValue" class="pill warn">$0.00</span></div>
-      <div class="badge">身份 <span id="statusValue" class="pill warn">你來幹嘛仔</span></div>
+      <div class="badge">什麼仔 <span id="statusValue" class="pill warn">你來幹嘛仔</span></div>
     </div>
   </div>
 </div>
@@ -86,8 +79,8 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
         <form id="entryForm">
           <div class="grid-2">
             <div><label>日期📅</label><input type="date" id="dateInput" required /></div>
-            <div><label>金額💰</label><input type="number" id="costInput" step="0.01" inputmode="decimal" placeholder="例如 12.50" required /></div>
-            <div><label>項目🥐</label><input type="text" id="itemInput" placeholder="Coffee / Uber ..." required /></div>
+            <div><label>金額💰</label><input type="number" id="costInput" step="0.01" inputmode="decimal" required /></div>
+            <div><label>項目🥐</label><input type="text" id="itemInput" required /></div>
             <div><label>付錢的人 👛</label>
               <select id="payerSelect" required>
                 <option value="">請選擇</option>
@@ -102,30 +95,24 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
               </select>
             </div>
             <div><label>分帳類型 ⚖️</label>
-              <select id="splitSelect" required>
+              <select id="splitSelect" required disabled>
+                <option value="不用分">不用分</option>
                 <option value="均分">均分</option>
-                <option value="非均分">非均分</option>
+                <option value="不要均分">不要均分</option>
               </select>
             </div>
           </div>
+
+          <div id="splitAmounts" class="hidden" style="margin-top:10px;">
+            <div><label id="person1Label"></label><input type="number" id="person1Amount" step="0.01" /></div>
+            <div><label id="person2Label"></label><input type="number" id="person2Amount" step="0.01" /></div>
+          </div>
+
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-            <button type="submit" class="primary" style="flex:1 1 180px">➕ 新增</button>
-            <span id="msg" class="muted" aria-live="polite" style="align-self:center"></span>
+            <button type="submit" class="primary" style="flex:1 1 180px;background:#111;color:#fff;">➕ 新增</button>
+            <span id="msg" class="muted" style="align-self:center;color:#666"></span>
           </div>
         </form>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:var(--gap)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h3 style="margin:0">所有項目</h3>
-        <button id="refreshBtn" class="pill" type="button">🔄 重新整理</button>
-      </div>
-      <div class="table-wrap">
-        <table id="dataTable" class="responsive" role="table">
-          <thead><tr><th>日期📅</th><th>項目🥐</th><th>付錢人👛</th><th>欠錢人💸</th><th>分帳⚖️</th><th class="right">金額💰</th></tr></thead>
-          <tbody></tbody>
-        </table>
       </div>
     </div>
   </section>
@@ -134,108 +121,164 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 <script>
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSd4fYEjOVAd4pqplNQPAVHjmNAfgHSuKATlyZjpPlLcxYlPEw/formResponse";
 const FORM_FIELDS = {
-  dateYear:  'entry.1195304321_year',
-  dateMonth: 'entry.1195304321_month',
-  dateDay:   'entry.1195304321_day',
-  item:      'entry.2054976462',
-  cost:      'entry.1660109991',
-  payer:     'entry.235188570',
-  debtor:    'entry.426638451',
-  splitType: 'entry.528419311_sentinel'
+  dateYear:'entry.1195304321_year',
+  dateMonth:'entry.1195304321_month',
+  dateDay:'entry.1195304321_day',
+  item:'entry.2054976462',
+  cost:'entry.1660109991',
+  payer:'entry.235188570',
+  debtor:'entry.426638451',
+  splitType:'entry.528419311_sentinel'
 };
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
-
-const $=s=>document.querySelector(s);
-const fmtMoney=n=>(isNaN(n)?'$0.00':(n<0?'-':'')+'$'+Math.abs(n).toFixed(2));
-const csvUrl=()=>BASE_CSV_URL+(BASE_CSV_URL.includes('?')?'&':'?')+'cb='+Date.now();
-async function fetchCSV(){const res=await fetch(csvUrl(),{cache:'no-store'});return await res.text();}
-function detectDelimiter(text){const first=text.split(/\r?\n/)[0]||'';return(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':',';}
-function parseCSV(text){const d=detectDelimiter(text);return text.trim().split(/\r?\n/).map(l=>l.split(d));}
-
-function renderTable(rows){
-  const tbody=$('#dataTable tbody');tbody.innerHTML='';
-  const dataRows=rows.slice(1).filter(r=>r&&r.some(c=>String(c||'').trim()!==''));
-  dataRows.reverse().forEach(r=>{
-    const [timestamp,date,item,cost,payer,debtor,split]=r;
-    const val=parseFloat((cost||'').replace(/[^0-9.\-]/g,''));
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${date||''}</td><td>${item||''}</td><td>${payer||''}</td><td>${debtor||''}</td><td>${split||''}</td><td class="right">${isNaN(val)?'':fmtMoney(val)}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-function calculateBalances(rows){
-  const balances={丁丁:0,迪西:0,小波:0};
-  const dataRows=rows.slice(1).filter(r=>r&&r.length>=6);
-  for(const r of dataRows){
-    const cost=parseFloat((r[3]||'').replace(/[^0-9.\-]/g,''));if(isNaN(cost))continue;
-    const payer=r[4]?.trim(),debtor=r[5]?.trim(),split=r[6]?.trim();
-    if(split==='均分'||split.toUpperCase()==='YES'){
-      const share=cost/3;
-      for(const n of Object.keys(balances)){
-        if(n===payer)balances[n]+=cost-share;else balances[n]-=share;
-      }
-    }else if(payer&&debtor){balances[payer]+=cost;balances[debtor]-=cost;}
-  }
-  return balances;
-}
-
-function updateTopBadges(rows){
-  const user=$("#userSelect").value;
-  if(!user){setText('overallValue','—');setText('statusValue','—');return;}
-  const balances=calculateBalances(rows);
-  const val=balances[user]||0;
-  $("#overallValue").textContent=fmtMoney(val);
-  const st=$("#statusValue");st.classList.remove('ok','warn');
-  if(val>0){st.textContent='欠錢仔';st.classList.add('warn');}
-  else if(val<0){st.textContent='領錢仔';st.classList.add('ok');}
-  else{st.textContent='你來幹嘛仔';}
-}
-const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-
-async function refresh(){
-  try{
-    setText('statusValue','Loading…');
-    const csvText=await fetchCSV();
-    const rows=parseCSV(csvText);
-    renderTable(rows);updateTopBadges(rows);
-  }catch(e){console.error(e);setText('statusValue','Load error');}
-}
-$("#refreshBtn").addEventListener('click',refresh);
-$("#userSelect").addEventListener('change',refresh);
-
 const members=["丁丁","迪西","小波"];
-$("#payerSelect").addEventListener("change",function(){
-  const payer=this.value;const debtorSelect=$("#debtorSelect");
+const $=s=>document.querySelector(s);
+
+// === 直接從同一張 CSV 取 OVERALL / STATUS ===
+async function updateFixedSummary(){
+  try {
+    const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
+    const text = await res.text();
+    const rows = text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const headers = rows[0];
+    if (!headers.includes("HUMAN")) return;
+    const user = $("#userSelect").value;
+    const hIdx = headers.indexOf("HUMAN");
+    const oIdx = headers.indexOf("OVERALL");
+    const sIdx = headers.indexOf("STATUS");
+    const found = rows.find(r => r[hIdx] === user);
+    if(found){
+      $("#overallValue").textContent = '$' + (parseFloat(found[oIdx])||0).toFixed(2);
+      const st = $("#statusValue");
+      st.textContent = found[sIdx] || '你來幹嘛仔';
+      st.classList.remove('ok','warn');
+      if(st.textContent.includes('欠')) st.classList.add('warn');
+      else if(st.textContent.includes('領')) st.classList.add('ok');
+    }
+  } catch(e){
+    console.error("summary fetch failed", e);
+  }
+}
+
+$("#userSelect").addEventListener("change", updateFixedSummary);
+document.addEventListener("DOMContentLoaded", updateFixedSummary);
+
+// === 欠錢邏輯 ===
+$("#payerSelect").addEventListener("change",()=>{
+  const payer=$("#payerSelect").value;
+  const debtorSelect=$("#debtorSelect");
   debtorSelect.innerHTML='<option value="">請選擇</option>';
+  $("#splitSelect").value="不用分";$("#splitSelect").disabled=true;
+  $("#splitAmounts").classList.add("hidden");
   if(payer){
     members.filter(n=>n!==payer).forEach(n=>{
       const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
     });
+    const both=document.createElement("option");
+    both.value="兩個都";both.textContent="兩個都";
+    debtorSelect.appendChild(both);
   }
+});
+
+$("#debtorSelect").addEventListener("change",()=>{
+  const debtor=$("#debtorSelect").value;
+  const payer=$("#payerSelect").value;
+  const split=$("#splitSelect");
+  const splitAmounts=$("#splitAmounts");
+  if(debtor==="兩個都"){
+    split.disabled=false;
+    split.value="均分";
+    splitAmounts.classList.remove("hidden");
+    const others=members.filter(n=>n!==payer);
+    $("#person1Label").textContent=others[0]+"：";
+    $("#person2Label").textContent=others[1]+"：";
+    handleSplitChange();
+  }else{
+    split.value="不用分";
+    split.disabled=true;
+    splitAmounts.classList.add("hidden");
+  }
+});
+
+$("#splitSelect").addEventListener("change",handleSplitChange);
+
+function handleSplitChange(){
+  const type=$("#splitSelect").value;
+  const cost=parseFloat($("#costInput").value)||0;
+  const inputs=[$("#person1Amount"),$("#person2Amount")];
+  if(type==="均分"){
+    const half=(cost/2).toFixed(2);
+    inputs.forEach(i=>{i.value=half;i.disabled=true;});
+  }else if(type==="不要均分"){
+    inputs.forEach(i=>{i.value='';i.disabled=false;});
+  }else{
+    inputs.forEach(i=>{i.value='';i.disabled=true;});
+  }
+}
+
+$("#costInput").addEventListener("input",()=>{
+  const type=$("#splitSelect").value;
+  if(type==="均分") handleSplitChange();
 });
 
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const msg=$("#msg");msg.textContent="送出中…";
+  const msg=$("#msg");
+  msg.textContent="送出中…";
   const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
-  const d=new Date(dVal);const fd=new FormData();
-  fd.append(FORM_FIELDS.dateYear,d.getFullYear());
-  fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
-  fd.append(FORM_FIELDS.dateDay,d.getDate());
-  fd.append(FORM_FIELDS.item,$("#itemInput").value.trim());
-  fd.append(FORM_FIELDS.cost,$("#costInput").value.trim());
-  fd.append(FORM_FIELDS.payer,$("#payerSelect").value);
-  fd.append(FORM_FIELDS.debtor,$("#debtorSelect").value);
-  fd.append(FORM_FIELDS.splitType,$("#splitSelect").value);
+  const d=new Date(dVal);
+  const item=$("#itemInput").value.trim();
+  const cost=parseFloat($("#costInput").value);
+  const payer=$("#payerSelect").value;
+  const debtor=$("#debtorSelect").value;
+  const splitType=$("#splitSelect").value;
+
+  if(!payer||!debtor){msg.textContent="請選擇付錢人與欠錢人";return;}
+
+  const fdBase=()=>{const fd=new FormData();
+    fd.append(FORM_FIELDS.dateYear,d.getFullYear());
+    fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
+    fd.append(FORM_FIELDS.dateDay,d.getDate());
+    return fd;};
+
   try{
-    await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+    if(debtor==="兩個都"){
+      const others=members.filter(n=>n!==payer);
+      const p1=$("#person1Amount").value||0;
+      const p2=$("#person2Amount").value||0;
+      const type=$("#splitSelect").value;
+      const iName=item+" (SPLIT)";
+      const entries=[
+        {debtor:others[0],amount:(type==="均分"?cost/2:p1)},
+        {debtor:others[1],amount:(type==="均分"?cost/2:p2)}
+      ];
+      for(const ent of entries){
+        const fd=fdBase();
+        fd.append(FORM_FIELDS.item,iName);
+        fd.append(FORM_FIELDS.cost,ent.amount);
+        fd.append(FORM_FIELDS.payer,payer);
+        fd.append(FORM_FIELDS.debtor,ent.debtor);
+        fd.append(FORM_FIELDS.splitType,splitType);
+        await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+      }
+    }else{
+      const fd=fdBase();
+      fd.append(FORM_FIELDS.item,item);
+      fd.append(FORM_FIELDS.cost,cost);
+      fd.append(FORM_FIELDS.payer,payer);
+      fd.append(FORM_FIELDS.debtor,debtor);
+      fd.append(FORM_FIELDS.splitType,splitType);
+      await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+    }
     msg.textContent="已新增！";
-    $("#itemInput").value="";$("#costInput").value="";
-    setTimeout(refresh,900);setTimeout(()=>msg.textContent="",2000);
-  }catch(err){console.error(err);msg.textContent="送出失敗，請重試";}
+    setTimeout(()=>msg.textContent="",2000);
+    $("#entryForm").reset();
+    $("#splitAmounts").classList.add("hidden");
+  }catch(err){
+    console.error(err);
+    msg.textContent="送出失敗，請重試";
+  }
 });
-refresh();
 </script>
 </body>
 </html>
