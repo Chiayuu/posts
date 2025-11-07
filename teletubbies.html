@@ -1,0 +1,231 @@
+<!DOCTYPE HTML>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8" />
+<title>欠錢仔 欠錢不還</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="stylesheet" href="assets/css/main.css" />
+<style>
+:root{ --radius:12px; --gap:14px; }
+body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
+.wrap{max-width:980px;margin:0 auto;padding:18px;}
+.card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
+.section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
+.toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
+.toolbar .inner2{max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 18px;flex-wrap:wrap;}
+.badge-group{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;}
+.badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.pill{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;line-height:1;white-space:nowrap;width:max-content;}
+.pill.ok{background:#e9f7ef;border-color:#d4efdf}
+.pill.warn{background:#fff6e6;border-color:#ffe0a3}
+form label{display:block;margin:.5rem 0 .25rem}
+input,select,button{width:100%;padding:14px;border:1px solid #ddd;border-radius:10px;font-size:16px;background:#fff}
+button{cursor:pointer;background:#f5f5f5}
+button.primary{background:#111;color:#fff;border-color:#111}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.muted{color:#666}
+.table-wrap{margin-top:12px}
+table.responsive{min-width:560px;width:100%;border-collapse:collapse}
+th,td{padding:.65rem;border-bottom:1px solid #eee;text-align:left}
+td.right,th.right{text-align:right}
+@media(max-width:880px){.section{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.wrap{padding:14px}}
+</style>
+</head>
+<body class="is-preload">
+
+<header id="header">
+  <div class="inner">
+    <h1><strong>CHIAYU's WEBSITE</strong></h1>
+    <h1>An Engineer.</h1>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="inner2">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <b>欠錢仔 欠錢不還</b>
+      <label for="userSelect" style="font-weight:500">你是誰：</label>
+      <select id="userSelect">
+        <option value="丁丁">丁丁</option>
+        <option value="迪西">迪西</option>
+        <option value="小波">小波</option>
+      </select>
+    </div>
+    <div class="badge-group">
+      <div class="badge">金額 <span id="overallValue" class="pill warn">—</span></div>
+      <div class="badge">身份 <span id="statusValue" class="pill warn">Loading…</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="main" class="wrap">
+  <section id="one">
+    <div class="section">
+      <div class="card">
+        <h3 style="margin-top:0">新增一筆</h3>
+        <form id="entryForm">
+          <div class="grid-2">
+            <div><label>日期📅</label><input type="date" id="dateInput" required /></div>
+            <div><label>金額💰</label><input type="number" id="costInput" step="0.01" inputmode="decimal" placeholder="例如 12.50" required /></div>
+            <div><label>項目🥐</label><input type="text" id="itemInput" placeholder="Coffee / Uber ..." required /></div>
+            <div><label>付錢的人 👛</label>
+              <select id="payerSelect" required>
+                <option value="">請選擇</option>
+                <option value="丁丁">丁丁</option>
+                <option value="迪西">迪西</option>
+                <option value="小波">小波</option>
+              </select>
+            </div>
+            <div><label>欠錢的人 💸</label>
+              <select id="debtorSelect" required>
+                <option value="">請先選擇付錢的人</option>
+              </select>
+            </div>
+            <div><label>分帳類型 ⚖️</label>
+              <select id="splitSelect" required>
+                <option value="均分">均分</option>
+                <option value="非均分">非均分</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+            <button type="submit" class="primary" style="flex:1 1 180px">➕ 新增</button>
+            <span id="msg" class="muted" aria-live="polite" style="align-self:center"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:var(--gap)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0">所有項目</h3>
+        <button id="refreshBtn" class="pill" type="button">🔄 重新整理</button>
+      </div>
+      <div class="table-wrap">
+        <table id="dataTable" class="responsive" role="table">
+          <thead><tr><th>日期📅</th><th>項目🥐</th><th>付錢人👛</th><th>欠錢人💸</th><th>分帳⚖️</th><th class="right">金額💰</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSd4fYEjOVAd4pqplNQPAVHjmNAfgHSuKATlyZjpPlLcxYlPEw/formResponse";
+const FORM_FIELDS = {
+  dateYear:  'entry.1195304321_year',
+  dateMonth: 'entry.1195304321_month',
+  dateDay:   'entry.1195304321_day',
+  item:      'entry.2054976462',
+  cost:      'entry.1660109991',
+  payer:     'entry.235188570',
+  debtor:    'entry.426638451',
+  splitType: 'entry.528419311_sentinel'
+};
+// 👇 改成妳自己的 Google Sheet CSV 連結
+const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-xxxxxx/pub?gid=0&single=true&output=csv";
+
+const $ = s => document.querySelector(s);
+const fmtMoney = n => (isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2));
+const csvUrl = () => BASE_CSV_URL + (BASE_CSV_URL.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+
+async function fetchCSV(){ const res = await fetch(csvUrl(), { cache: 'no-store' }); return await res.text(); }
+function detectDelimiter(text){ const first=text.split(/\r?\n/)[0]||''; return (first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':','; }
+function parseCSV(text){ const d=detectDelimiter(text); return text.trim().split(/\r?\n/).map(l=>l.split(d)); }
+
+function renderTable(rows){
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML = '';
+  const dataRows = rows.slice(1).filter(r=>r && r.some(c=>String(c||'').trim()!==''));
+  dataRows.reverse().forEach(r=>{
+    const [timestamp,date,item,cost,payer,debtor,split] = r;
+    const val=parseFloat((cost||'').replace(/[^0-9.\-]/g,''));
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${date||''}</td><td>${item||''}</td><td>${payer||''}</td><td>${debtor||''}</td><td>${split||''}</td><td class="right">${isNaN(val)?'':fmtMoney(val)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function calculateBalances(rows){
+  const balances={丁丁:0,迪西:0,小波:0};
+  const dataRows=rows.slice(1).filter(r=>r && r.length>=6);
+  for(const r of dataRows){
+    const cost=parseFloat((r[3]||'').replace(/[^0-9.\-]/g,'')); if(isNaN(cost)) continue;
+    const payer=r[4]?.trim(),debtor=r[5]?.trim(),split=r[6]?.trim();
+    if(split==='均分'||split.toUpperCase()==='YES'){
+      const share=cost/3;
+      for(const n of Object.keys(balances)){
+        if(n===payer) balances[n]+=cost-share;
+        else balances[n]-=share;
+      }
+    }else{
+      if(payer&&debtor){balances[payer]+=cost;balances[debtor]-=cost;}
+    }
+  }
+  return balances;
+}
+
+function updateTopBadges(rows){
+  const user=$("#userSelect").value;
+  if(!user){setText('overallValue','—');setText('statusValue','—');return;}
+  const balances=calculateBalances(rows);
+  const val=balances[user]||0;
+  $("#overallValue").textContent=fmtMoney(val);
+  const st=$("#statusValue"); st.classList.remove('ok','warn');
+  if(val>0){st.textContent='欠錢仔';st.classList.add('warn');}
+  else if(val<0){st.textContent='領錢仔';st.classList.add('ok');}
+  else{st.textContent='你來幹嘛仔';}
+}
+const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+
+async function refresh(){
+  try{
+    setText('statusValue','Loading…');
+    const csvText=await fetchCSV();
+    const rows=parseCSV(csvText);
+    renderTable(rows);
+    updateTopBadges(rows);
+  }catch(e){console.error(e);setText('statusValue','Load error');}
+}
+$("#refreshBtn").addEventListener('click',refresh);
+$("#userSelect").addEventListener('change',refresh);
+
+const members=["丁丁","迪西","小波"];
+$("#payerSelect").addEventListener("change",function(){
+  const payer=this.value;
+  const debtorSelect=$("#debtorSelect");
+  debtorSelect.innerHTML='<option value="">請選擇</option>';
+  if(payer){
+    members.filter(n=>n!==payer).forEach(n=>{
+      const opt=document.createElement("option");
+      opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
+    });
+  }
+});
+
+$("#entryForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const msg=$("#msg");msg.textContent="送出中…";
+  const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
+  const d=new Date(dVal);const fd=new FormData();
+  fd.append(FORM_FIELDS.dateYear,d.getFullYear());
+  fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
+  fd.append(FORM_FIELDS.dateDay,d.getDate());
+  fd.append(FORM_FIELDS.item,$("#itemInput").value.trim());
+  fd.append(FORM_FIELDS.cost,$("#costInput").value.trim());
+  fd.append(FORM_FIELDS.payer,$("#payerSelect").value);
+  fd.append(FORM_FIELDS.debtor,$("#debtorSelect").value);
+  fd.append(FORM_FIELDS.splitType,$("#splitSelect").value);
+  try{
+    await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+    msg.textContent="已新增！";
+    $("#itemInput").value="";$("#costInput").value="";
+    setTimeout(refresh,900);setTimeout(()=>msg.textContent="",2000);
+  }catch(err){console.error(err);msg.textContent="送出失敗，請重試";}
+});
+
+refresh();
+</script>
+</body>
+</html>
