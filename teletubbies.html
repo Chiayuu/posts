@@ -45,6 +45,25 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 #payerSelect,#debtorSelect,#splitSelect{
   height:48px;font-size:16px;padding:10px 14px;line-height:1.4;
 }
+
+  /* 頂部「你是誰」選單修正版：文字垂直置中完整顯示 */
+#userSelect {
+  height: 48px;
+  font-size: 17px;
+  padding: 0 16px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 600;
+  box-sizing: border-box;
+  line-height: 48px;       /* ✅ 讓字垂直置中 */
+  appearance: none;        /* 移除系統預設樣式（更一致） */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+}
+
 </style>
 </head>
 
