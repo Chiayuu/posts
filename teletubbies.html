@@ -12,10 +12,19 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 .card{background:#fff;border:1px solid #eaeaea;border-radius:var(--radius);padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.04);}
 .section{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--gap);}
 .toolbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid #eee;}
-.toolbar .inner2{max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 18px;flex-wrap:wrap;}
-.badge-group{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;}
+.toolbar .inner2{
+  max-width:980px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 18px;
+  white-space:nowrap;overflow-x:auto;
+}
+.toolbar-left{
+  display:flex;align-items:center;gap:10px;min-width:0;
+}
+.toolbar-left b{font-weight:700;color:#555;}
+.badge-group{display:flex;align-items:center;gap:12px 14px;}
 .badge{display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.pill{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;line-height:1;white-space:nowrap;width:max-content;}
+.pill{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:10px;border:1px solid #e6e6e6;background:#f7f7f7;font-weight:600;line-height:1;white-space:nowrap;width:max-content;}
 .pill.ok{background:#e9f7ef;border-color:#d4efdf}
 .pill.warn{background:#fff6e6;border-color:#ffe0a3}
 form label{display:block;margin:.5rem 0 .25rem}
@@ -28,7 +37,12 @@ button.primary{background:#111;color:#fff;border-color:#111}
 table.responsive{min-width:560px;width:100%;border-collapse:collapse}
 th,td{padding:.65rem;border-bottom:1px solid #eee;text-align:left}
 td.right,th.right{text-align:right}
-@media(max-width:880px){.section{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.wrap{padding:14px}}
+@media(max-width:880px){
+  .section{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+  .wrap{padding:14px}
+  .toolbar .inner2{flex-wrap:wrap;justify-content:flex-start}
+}
 </style>
 </head>
 <body class="is-preload">
@@ -40,9 +54,10 @@ td.right,th.right{text-align:right}
   </div>
 </header>
 
+<!-- Toolbar 一列排列 -->
 <div class="toolbar">
   <div class="inner2">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div class="toolbar-left">
       <b>天線寶寶討債集團</b>
       <label for="userSelect" style="font-weight:500">你是誰：</label>
       <select id="userSelect">
@@ -52,8 +67,8 @@ td.right,th.right{text-align:right}
       </select>
     </div>
     <div class="badge-group">
-      <div class="badge">金額 <span id="overallValue" class="pill warn">—</span></div>
-      <div class="badge">身份 <span id="statusValue" class="pill warn">Loading…</span></div>
+      <div class="badge">金額 <span id="overallValue" class="pill warn">$0.00</span></div>
+      <div class="badge">身份 <span id="statusValue" class="pill warn">你來幹嘛仔</span></div>
     </div>
   </div>
 </div>
@@ -123,23 +138,20 @@ const FORM_FIELDS = {
   debtor:    'entry.426638451',
   splitType: 'entry.528419311_sentinel'
 };
-
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
 
-const $ = s => document.querySelector(s);
-const fmtMoney = n => (isNaN(n) ? '$0.00' : (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2));
-const csvUrl = () => BASE_CSV_URL + (BASE_CSV_URL.includes('?') ? '&' : '?') + 'cb=' + Date.now();
-
-async function fetchCSV(){ const res = await fetch(csvUrl(), { cache: 'no-store' }); return await res.text(); }
-function detectDelimiter(text){ const first=text.split(/\r?\n/)[0]||''; return (first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':','; }
-function parseCSV(text){ const d=detectDelimiter(text); return text.trim().split(/\r?\n/).map(l=>l.split(d)); }
+const $=s=>document.querySelector(s);
+const fmtMoney=n=>(isNaN(n)?'$0.00':(n<0?'-':'')+'$'+Math.abs(n).toFixed(2));
+const csvUrl=()=>BASE_CSV_URL+(BASE_CSV_URL.includes('?')?'&':'?')+'cb='+Date.now();
+async function fetchCSV(){const res=await fetch(csvUrl(),{cache:'no-store'});return await res.text();}
+function detectDelimiter(text){const first=text.split(/\r?\n/)[0]||'';return(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':',';}
+function parseCSV(text){const d=detectDelimiter(text);return text.trim().split(/\r?\n/).map(l=>l.split(d));}
 
 function renderTable(rows){
-  const tbody = document.querySelector('#dataTable tbody');
-  tbody.innerHTML = '';
-  const dataRows = rows.slice(1).filter(r=>r && r.some(c=>String(c||'').trim()!==''));
+  const tbody=$('#dataTable tbody');tbody.innerHTML='';
+  const dataRows=rows.slice(1).filter(r=>r&&r.some(c=>String(c||'').trim()!==''));
   dataRows.reverse().forEach(r=>{
-    const [timestamp,date,item,cost,payer,debtor,split] = r;
+    const [timestamp,date,item,cost,payer,debtor,split]=r;
     const val=parseFloat((cost||'').replace(/[^0-9.\-]/g,''));
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${date||''}</td><td>${item||''}</td><td>${payer||''}</td><td>${debtor||''}</td><td>${split||''}</td><td class="right">${isNaN(val)?'':fmtMoney(val)}</td>`;
@@ -149,19 +161,16 @@ function renderTable(rows){
 
 function calculateBalances(rows){
   const balances={丁丁:0,迪西:0,小波:0};
-  const dataRows=rows.slice(1).filter(r=>r && r.length>=6);
+  const dataRows=rows.slice(1).filter(r=>r&&r.length>=6);
   for(const r of dataRows){
-    const cost=parseFloat((r[3]||'').replace(/[^0-9.\-]/g,'')); if(isNaN(cost)) continue;
+    const cost=parseFloat((r[3]||'').replace(/[^0-9.\-]/g,''));if(isNaN(cost))continue;
     const payer=r[4]?.trim(),debtor=r[5]?.trim(),split=r[6]?.trim();
     if(split==='均分'||split.toUpperCase()==='YES'){
       const share=cost/3;
       for(const n of Object.keys(balances)){
-        if(n===payer) balances[n]+=cost-share;
-        else balances[n]-=share;
+        if(n===payer)balances[n]+=cost-share;else balances[n]-=share;
       }
-    }else{
-      if(payer&&debtor){balances[payer]+=cost;balances[debtor]-=cost;}
-    }
+    }else if(payer&&debtor){balances[payer]+=cost;balances[debtor]-=cost;}
   }
   return balances;
 }
@@ -172,7 +181,7 @@ function updateTopBadges(rows){
   const balances=calculateBalances(rows);
   const val=balances[user]||0;
   $("#overallValue").textContent=fmtMoney(val);
-  const st=$("#statusValue"); st.classList.remove('ok','warn');
+  const st=$("#statusValue");st.classList.remove('ok','warn');
   if(val>0){st.textContent='欠錢仔';st.classList.add('warn');}
   else if(val<0){st.textContent='領錢仔';st.classList.add('ok');}
   else{st.textContent='你來幹嘛仔';}
@@ -184,8 +193,7 @@ async function refresh(){
     setText('statusValue','Loading…');
     const csvText=await fetchCSV();
     const rows=parseCSV(csvText);
-    renderTable(rows);
-    updateTopBadges(rows);
+    renderTable(rows);updateTopBadges(rows);
   }catch(e){console.error(e);setText('statusValue','Load error');}
 }
 $("#refreshBtn").addEventListener('click',refresh);
@@ -193,13 +201,11 @@ $("#userSelect").addEventListener('change',refresh);
 
 const members=["丁丁","迪西","小波"];
 $("#payerSelect").addEventListener("change",function(){
-  const payer=this.value;
-  const debtorSelect=$("#debtorSelect");
+  const payer=this.value;const debtorSelect=$("#debtorSelect");
   debtorSelect.innerHTML='<option value="">請選擇</option>';
   if(payer){
     members.filter(n=>n!==payer).forEach(n=>{
-      const opt=document.createElement("option");
-      opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
+      const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtorSelect.appendChild(opt);
     });
   }
 });
@@ -224,7 +230,6 @@ $("#entryForm").addEventListener("submit",async e=>{
     setTimeout(refresh,900);setTimeout(()=>msg.textContent="",2000);
   }catch(err){console.error(err);msg.textContent="送出失敗，請重試";}
 });
-
 refresh();
 </script>
 </body>
