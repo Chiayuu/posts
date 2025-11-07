@@ -122,28 +122,28 @@ body{ -webkit-text-size-adjust:100%; font-family:"Noto Sans TC",sans-serif; back
 </div>
 
 <script>
-/* ✅ 改成妳的表單網址 */
+/* ✅ 妳的 Google Form 提交網址 */
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
 
-/* ✅ 這些是 Google Form 的欄位代碼，若不符要重新查 name="entry.XXXX" */
+/* ✅ 新的欄位代碼對照 */
 const FORM_FIELDS = {
-  dateYear:'entry.1195304321_year',
-  dateMonth:'entry.1195304321_month',
-  dateDay:'entry.1195304321_day',
-  item:'entry.2054976462',
-  cost:'entry.1660109991',
-  payer:'entry.235188570',
-  debtor:'entry.426638451',
-  splitType:'entry.528419311_sentinel'
+  split: 'entry.528419311',
+  paid:  'entry.2954976462',
+  item:  'entry.1660190991',
+  cost:  'entry.235188570',
+  robber:'entry.426683451',
+  dateYear:  'entry.1195304321_year',
+  dateMonth: 'entry.1195304321_month',
+  dateDay:   'entry.1195304321_day',
 };
 
-/* ✅ 妳的同一份 Sheet CSV */
+/* ✅ 同一張 CSV 讀取用 */
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
 
 const members=["丁丁","迪西","小波"];
 const $=s=>document.querySelector(s);
 
-/* === 顯示總金額、身份 === */
+/* === 顯示金額與身份 === */
 async function updateFixedSummary(){
   try {
     const res = await fetch(BASE_CSV_URL + "&cb=" + Date.now());
@@ -255,25 +255,25 @@ $("#entryForm").addEventListener("submit",async e=>{
       const type=$("#splitSelect").value;
       const iName=item+" (SPLIT)";
       const entries=[
-        {debtor:others[0],amount:(type==="均分"?cost/2:p1)},
-        {debtor:others[1],amount:(type==="均分"?cost/2:p2)}
+        {robber:others[0],amount:(type==="均分"?cost/2:p1)},
+        {robber:others[1],amount:(type==="均分"?cost/2:p2)}
       ];
       for(const ent of entries){
         const fd=fdBase();
         fd.append(FORM_FIELDS.item,iName);
         fd.append(FORM_FIELDS.cost,ent.amount);
-        fd.append(FORM_FIELDS.payer,payer);
-        fd.append(FORM_FIELDS.debtor,ent.debtor);
-        fd.append(FORM_FIELDS.splitType,splitType);
+        fd.append(FORM_FIELDS.paid,payer);
+        fd.append(FORM_FIELDS.robber,ent.robber);
+        fd.append(FORM_FIELDS.split,splitType);
         await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
       }
     }else{
       const fd=fdBase();
       fd.append(FORM_FIELDS.item,item);
       fd.append(FORM_FIELDS.cost,cost);
-      fd.append(FORM_FIELDS.payer,payer);
-      fd.append(FORM_FIELDS.debtor,debtor);
-      fd.append(FORM_FIELDS.splitType,splitType);
+      fd.append(FORM_FIELDS.paid,payer);
+      fd.append(FORM_FIELDS.robber,debtor);
+      fd.append(FORM_FIELDS.split,splitType);
       await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
     }
     msg.textContent="已新增！";
@@ -286,5 +286,6 @@ $("#entryForm").addEventListener("submit",async e=>{
   }
 });
 </script>
+
 </body>
 </html>
