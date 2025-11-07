@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <title>天線寶寶討債集團</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<link rel="stylesheet" href="assets/css/main.css" />
 <style>
 :root{ --radius:12px; --gap:14px; }
 body{ font-family:"Noto Sans TC",sans-serif; background:#fafafa; margin:0; }
@@ -29,7 +28,6 @@ td.right{text-align:right;}
 </head>
 <body>
 
-<!-- Header -->
 <header id="header">
   <div class="inner">
     <h1><strong>CHIAYU's WEBSITE</strong></h1>
@@ -37,7 +35,6 @@ td.right{text-align:right;}
   </div>
 </header>
 
-<!-- Toolbar -->
 <div class="toolbar">
   <div class="inner2">
     <div class="toolbar-left">
@@ -49,7 +46,7 @@ td.right{text-align:right;}
       </select>
     </div>
     <div class="badge-group">
-      <div class="badge">金額 <span id="overallValue" class="pill warn">—</span></div>
+      <div class="badge">金額 <span id="overallValue" class="pill warn">$0.00</span></div>
       <div class="badge">身份 <span id="statusValue" class="pill warn">—</span></div>
     </div>
   </div>
@@ -58,7 +55,6 @@ td.right{text-align:right;}
 <div id="main" class="wrap">
   <section id="one">
     <div class="section">
-      <!-- 左側：表單 -->
       <div class="card">
         <h3 style="margin-top:0">新增一筆</h3>
         <form id="entryForm">
@@ -98,7 +94,6 @@ td.right{text-align:right;}
         </form>
       </div>
 
-      <!-- 右側：紀錄 -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <h3 style="margin:0">紀錄</h3>
@@ -114,32 +109,38 @@ td.right{text-align:right;}
 </div>
 
 <script>
-const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?gid=303384883&single=true&output=csv";
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
-const members = ["丁丁","迪西","小波"];
-const $ = s => document.querySelector(s);
+const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?output=csv";
+const FORM_FIELDS = {
+  splitType: 'entry.528419311',
+  item: 'entry.2054976462',
+  cost: 'entry.1660109991',
+  payer: 'entry.235188570',
+  debtor: 'entry.426638451',
+  dateYear: 'entry.1195304321_year',
+  dateMonth: 'entry.1195304321_month',
+  dateDay: 'entry.1195304321_day'
+};
+const members=["丁丁","迪西","小波"];
+const $=s=>document.querySelector(s);
 
-/* === 欄位互動 === */
-$("#payerSelect").addEventListener("change", ()=>{
-  const payer = $("#payerSelect").value;
-  const debtor = $("#debtorSelect");
-  debtor.innerHTML = '<option value="">請選擇</option>';
-  $("#splitSelect").disabled = true;
+/* 欠錢選單連動 */
+$("#payerSelect").addEventListener("change",()=>{
+  const payer=$("#payerSelect").value;
+  const debtor=$("#debtorSelect");
+  debtor.innerHTML='<option value="">請選擇</option>';
+  $("#splitSelect").value="不用分";
+  $("#splitSelect").disabled=true;
   $("#splitAmounts").classList.add("hidden");
-
   if(payer){
-    members.filter(x => x !== payer).forEach(n=>{
-      const opt=document.createElement("option");
-      opt.value=n; opt.textContent=n;
-      debtor.appendChild(opt);
+    members.filter(n=>n!==payer).forEach(n=>{
+      const opt=document.createElement("option");opt.value=n;opt.textContent=n;debtor.appendChild(opt);
     });
     const both=document.createElement("option");
-    both.value="兩個都"; both.textContent="兩個都";
-    debtor.appendChild(both);
+    both.value="兩個都";both.textContent="兩個都";debtor.appendChild(both);
   }
 });
-
-$("#debtorSelect").addEventListener("change", ()=>{
+$("#debtorSelect").addEventListener("change",()=>{
   const val=$("#debtorSelect").value;
   const payer=$("#payerSelect").value;
   if(val==="兩個都"){
@@ -156,7 +157,7 @@ $("#debtorSelect").addEventListener("change", ()=>{
   }
 });
 
-/* === 更新上方金額 === */
+/* 上方金額 */
 async function updateTop(){
   try{
     const res = await fetch(BASE_CSV_URL+"&cb="+Date.now());
@@ -166,28 +167,28 @@ async function updateTop(){
     const user = $("#userSelect").value;
     const found = data.find(r=>r[7]===user);
     if(found){
-      $("#overallValue").textContent = found[8];
+      $("#overallValue").textContent = '$' + found[8];
       $("#statusValue").textContent = found[9];
     }
   }catch(e){console.error(e);}
 }
 $("#userSelect").addEventListener("change", updateTop);
 
-/* === 表單送出 === */
+/* 表單送出 */
 $("#entryForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const msg=$("#msg"); msg.textContent="送出中…";
-  const dVal=$("#dateInput").value;
-  const d=new Date(dVal);
+  const d=new Date($("#dateInput").value);
   const fd=new FormData();
-  fd.append("entry.1195304321_year",d.getFullYear());
-  fd.append("entry.1195304321_month",d.getMonth()+1);
-  fd.append("entry.1195304321_day",d.getDate());
-  fd.append("entry.2054976462",$("#itemInput").value);
-  fd.append("entry.1660109991",$("#costInput").value);
-  fd.append("entry.235188570",$("#payerSelect").value);
-  fd.append("entry.426638451",$("#debtorSelect").value);
-  fd.append("entry.528419311_sentinel",$("#splitSelect").value);
+  fd.append(FORM_FIELDS.dateYear,d.getFullYear());
+  fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);
+  fd.append(FORM_FIELDS.dateDay,d.getDate());
+  fd.append(FORM_FIELDS.item,$("#itemInput").value);
+  fd.append(FORM_FIELDS.cost,$("#costInput").value);
+  fd.append(FORM_FIELDS.payer,$("#payerSelect").value);
+  fd.append(FORM_FIELDS.debtor,$("#debtorSelect").value);
+  fd.append(FORM_FIELDS.splitType,$("#splitSelect").value);
+  console.log("🟡送出內容：", [...fd.entries()]);
   try{
     await fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
     msg.textContent="✅ 已新增！";
@@ -195,10 +196,13 @@ $("#entryForm").addEventListener("submit",async e=>{
     $("#entryForm").reset();
     $("#splitAmounts").classList.add("hidden");
     setTimeout(refresh,1200);
-  }catch(e){msg.textContent="送出失敗";}
+  }catch(e){
+    console.error(e);
+    msg.textContent="❌ 送出失敗";
+  }
 });
 
-/* === 載入紀錄表 === */
+/* 紀錄載入 */
 async function refresh(){
   try{
     const res = await fetch(BASE_CSV_URL+"&cb="+Date.now());
