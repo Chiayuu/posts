@@ -197,10 +197,10 @@ async function updateTop(){
     const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
     const user=$("#userSelect").value;
     const data=rows.slice(3);
-    const found=data.find(r=>r[7]===user);
+    const found=data.find(r=>r[8]===user);
     if(found){
-      $("#overallValue").textContent='$'+found[8];
-      $("#statusValue").textContent=found[9];
+      $("#overallValue").textContent='$'+found[9];
+      $("#statusValue").textContent=found[10];
     } else {
       $("#overallValue").textContent='$0.00';
       $("#statusValue").textContent='—';
