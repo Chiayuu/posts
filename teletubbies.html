@@ -35,25 +35,27 @@ th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;}
 td.right{text-align:right;}
 input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 
-/* 三個下拉選單變高 */
-#payerSelect,#debtorSelect,#splitSelect{height:48px;font-size:16px;padding:10px 14px;line-height:1.4;}
+#payerSelect,#splitSelect{height:48px;font-size:16px;padding:10px 14px;line-height:1.4;}
 
-/* 頂部「你是誰」選單修正版 */
+/* 欠錢仔勾選框 */
+#debtorChecks{display:flex;flex-wrap:wrap;gap:8px;}
+#debtorChecks label{
+  display:inline-flex;align-items:center;gap:6px;margin:0;
+  padding:10px 14px;border:1px solid #ddd;border-radius:10px;background:#fff;
+  font-size:16px;cursor:pointer;user-select:none;width:auto;
+}
+#debtorChecks label.on{background:#eef4ff;border-color:#b9d0ff;}
+#debtorChecks input{width:auto;padding:0;margin:0;}
+#debtorChecks .hint{color:#999;align-self:center;padding:10px 0;}
+
+#splitAmounts .grid-2{margin-top:0}
+
 #userSelect {
-  height: 48px;
-  font-size: 17px;
-  padding: 0 16px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  background: #fff;
-  font-weight: 600;
-  box-sizing: border-box;
-  line-height: 48px;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-position: right 12px center;
-  background-repeat: no-repeat;
+  height: 48px; font-size: 17px; padding: 0 16px;
+  border: 1px solid #ccc; border-radius: 10px; background: #fff;
+  font-weight: 600; box-sizing: border-box; line-height: 48px;
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  background-position: right 12px center; background-repeat: no-repeat;
 }
 </style>
 </head>
@@ -74,6 +76,7 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
         <option value="丁丁" selected>丁丁</option>
         <option value="迪西">迪西</option>
         <option value="小波">小波</option>
+        <option value="太陽寶寶">太陽寶寶</option>
       </select>
     </div>
     <div class="toolbar-bottom badge-group">
@@ -93,13 +96,11 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
         <div style="grid-column:1 / -1"><label>項目🥐</label><input type="text" id="itemInput" required /></div>
         <div><label>付錢仔 👛</label>
           <select id="payerSelect" required>
-            <option value="">請選擇</option><option value="丁丁">丁丁</option>
-            <option value="迪西">迪西</option><option value="小波">小波</option>
-          </select>
-        </div>
-        <div><label>欠錢仔 💸</label>
-          <select id="debtorSelect" required>
-            <option value="">請先選擇付錢仔</option>
+            <option value="">請選擇</option>
+            <option value="丁丁">丁丁</option>
+            <option value="迪西">迪西</option>
+            <option value="小波">小波</option>
+            <option value="太陽寶寶">太陽寶寶</option>
           </select>
         </div>
         <div><label>分帳類型 ⚖️</label>
@@ -109,13 +110,14 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
             <option value="不要均分">不要均分</option>
           </select>
         </div>
+        <div style="grid-column:1 / -1">
+          <label>欠錢仔 💸（可複選；勾 1 個＝不用分，勾 2 個以上＝可均分）</label>
+          <div id="debtorChecks"><span class="hint">請先選擇付錢仔</span></div>
+        </div>
       </div>
 
       <div id="splitAmounts" class="hidden" style="margin-top:10px;">
-        <div class="grid-2">
-          <div><label id="person1Label"></label><input type="number" id="person1Amount" step="0.01" /></div>
-          <div><label id="person2Label"></label><input type="number" id="person2Amount" step="0.01" /></div>
-        </div>
+        <div class="grid-2" id="amountFields"></div>
       </div>
 
       <div style="display:flex;gap:10px;margin-top:10px;">
@@ -139,20 +141,38 @@ input[readonly]{background:#f3f3f3;cursor:not-allowed;}
 const GOOGLE_FORM_ACTION="https://docs.google.com/forms/d/e/1FAIpQLSceaEqQyCGpYWSkHvhT-Im_meidu-xNnuGWLV01HliuFbPgDA/formResponse";
 const BASE_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vR8vvbnkAJU-YpLTquAfQL5K102rAKQc7F_wRQmkQ1slJ2qSnpL3tJycnQ19OdMimVGwatN2USIL0nP/pub?output=csv";
 const FORM_FIELDS={splitType:'entry.528419311',item:'entry.2054976462',cost:'entry.1660109991',payer:'entry.235188570',debtor:'entry.426638451',dateYear:'entry.1195304321_year',dateMonth:'entry.1195304321_month',dateDay:'entry.1195304321_day'};
-const members=["丁丁","迪西","小波"],$=s=>document.querySelector(s);
 
-/* 上方金額顯示 */
+/* 四個人 —— 要再加人只改這一行 */
+const members=["丁丁","迪西","小波","太陽寶寶"];
+const $=s=>document.querySelector(s);
+
+/* ===== CSV 解析（支援欄位內含逗號） ===== */
+function parseCSV(text){
+  const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'&&q&&n==='"'){cur+='"';i++;continue;}
+    if(c==='"'){q=!q;continue;}
+    if(c===','&&!q){row.push(cur);cur='';continue;}
+    if((c==='\n'||c==='\r')&&!q){if(cur.length||row.length){row.push(cur);rows.push(row);}row=[];cur='';continue;}
+    cur+=c;
+  }
+  if(cur.length||row.length){row.push(cur);rows.push(row);}
+  return rows;
+}
+const num=v=>parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));
+
+/* ===== 上方「你是誰」金額顯示（讀 H/I/J 彙總欄） ===== */
 async function updateTop(){
   try{
     const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
-    const text=await res.text();
-    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
+    const rows=parseCSV(await res.text());
     const user=$("#userSelect").value;
-    const data=rows.slice(1);
-    const found=data.find(r=>r[7]===user);
+    const found=rows.slice(1).find(r=>(r[7]||'').trim()===user); // H 欄 = 名字
     if(found){
-      $("#overallValue").textContent='$'+(found[8]||'0.00');
-      const st=found[9]||'—';$("#statusValue").textContent=st;
+      $("#overallValue").textContent='$'+(found[8]||'0.00'); // I 欄 = 金額
+      const st=(found[9]||'—').trim();                        // J 欄 = 狀態
+      $("#statusValue").textContent=st;
       const pill=$("#statusValue");pill.classList.remove('ok','warn');
       if(/欠/.test(st)) pill.classList.add('warn'); else if(/討/.test(st)) pill.classList.add('ok');
     }else{$("#overallValue").textContent='$0.00';$("#statusValue").textContent='—';}
@@ -160,97 +180,127 @@ async function updateTop(){
 }
 $("#userSelect").addEventListener("change",updateTop);
 
-/* 欠錢人連動 + 分帳控制 */
-$("#payerSelect").addEventListener("change",()=>{
-  const payer=$("#payerSelect").value,debtor=$("#debtorSelect");
-  debtor.innerHTML='<option value="">請選擇欠錢仔</option>';
-  $("#splitSelect").value="不用分";$("#splitSelect").disabled=true;
-  $("#splitAmounts").classList.add("hidden");
-  if(payer){
-    members.filter(n=>n!==payer).forEach(n=>{
-      const o=document.createElement("option");o.value=n;o.textContent=n;debtor.appendChild(o);
-    });
-    const both=document.createElement("option");both.value="兩個都";both.textContent="兩個都";debtor.appendChild(both);
-  }
-});
+/* ===== 欠錢仔勾選框 ===== */
+function getCheckedDebtors(){
+  return [...document.querySelectorAll('#debtorChecks input:checked')].map(c=>c.value);
+}
+function renderDebtorChecks(){
+  const payer=$("#payerSelect").value;
+  const box=$("#debtorChecks");
+  box.innerHTML='';
+  if(!payer){box.innerHTML='<span class="hint">請先選擇付錢仔</span>';onDebtorsChanged();return;}
+  members.filter(n=>n!==payer).forEach(n=>{
+    const lab=document.createElement('label');
+    lab.innerHTML=`<input type="checkbox" value="${n}"> ${n}`;
+    const cb=lab.querySelector('input');
+    cb.addEventListener('change',()=>{ lab.classList.toggle('on',cb.checked); onDebtorsChanged(); });
+    box.appendChild(lab);
+  });
+  onDebtorsChanged();
+}
+$("#payerSelect").addEventListener("change",renderDebtorChecks);
 
-/* 兩個都：手機支援隱藏「不用分」 */
-$("#debtorSelect").addEventListener("change",()=>{
-  const val=$("#debtorSelect").value,payer=$("#payerSelect").value,cost=parseFloat($("#costInput").value||0);
-  if(val==="兩個都"){
-    $("#splitSelect").disabled=false;$("#splitSelect").value="均分";$("#splitAmounts").classList.remove("hidden");
-    const others=members.filter(x=>x!==payer);
-    $("#person1Label").textContent=others[0]+"：";$("#person2Label").textContent=others[1]+"：";
-    const half=(cost/2).toFixed(2);$("#person1Amount").value=half;$("#person2Amount").value=half;
-    $("#person1Amount").readOnly=true;$("#person2Amount").readOnly=true;
-    const noSplit=[...$("#splitSelect").options].find(o=>o.value==="不用分");
-    if(noSplit) $("#splitSelect").removeChild(noSplit);
+/* 依「勾幾個人」決定分帳類型可選項 */
+function onDebtorsChanged(){
+  const count=getCheckedDebtors().length;
+  const sel=$("#splitSelect");
+  const noSplit=[...sel.options].find(o=>o.value==='不用分');
+  if(count>=2){
+    sel.disabled=false;
+    if(noSplit) noSplit.disabled=true;          // 多人不能「不用分」
+    if(sel.value==='不用分') sel.value='均分';
   }else{
-    $("#splitSelect").disabled=true;$("#splitSelect").value="不用分";$("#splitAmounts").classList.add("hidden");
-    const exist=[...$("#splitSelect").options].some(o=>o.value==="不用分");
-    if(!exist){const opt=document.createElement("option");opt.value="不用分";opt.textContent="不用分";$("#splitSelect").prepend(opt);}
+    if(noSplit) noSplit.disabled=false;
+    sel.value='不用分'; sel.disabled=true;        // 0 或 1 人 → 不用分
   }
-});
+  renderAmounts();
+}
+$("#splitSelect").addEventListener("change",renderAmounts);
+$("#costInput").addEventListener("input",()=>{ if($("#splitSelect").value==='均分') renderAmounts(); });
 
-$("#costInput").addEventListener("input",()=>{
-  if($("#debtorSelect").value==="兩個都"&&$("#splitSelect").value==="均分"){
-    const half=(parseFloat($("#costInput").value||0)/2).toFixed(2);
-    $("#person1Amount").value=half;$("#person2Amount").value=half;
-  }
-});
-$("#splitSelect").addEventListener("change",()=>{
-  if($("#debtorSelect").value!=="兩個都")return;
-  if($("#splitSelect").value==="均分"){
-    const half=(parseFloat($("#costInput").value||0)/2).toFixed(2);
-    $("#person1Amount").value=half;$("#person2Amount").value=half;
-    $("#person1Amount").readOnly=true;$("#person2Amount").readOnly=true;
-  }else{$("#person1Amount").readOnly=false;$("#person2Amount").readOnly=false;}
-});
+/* 動態產生每個欠錢仔的金額欄 */
+function renderAmounts(){
+  const checked=getCheckedDebtors();
+  const split=$("#splitSelect").value;
+  const wrap=$("#splitAmounts"), fields=$("#amountFields");
+  fields.innerHTML='';
+  if(checked.length<2 || split==='不用分'){ wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  const cost=num($("#costInput").value)||0;
+  const even=(cost/checked.length);
+  checked.forEach(n=>{
+    const div=document.createElement('div');
+    const val=isNaN(even)?'':even.toFixed(2);
+    div.innerHTML=`<label>${n}：</label><input type="number" step="0.01" data-person="${n}" value="${val}" ${split==='均分'?'readonly':''}/>`;
+    fields.appendChild(div);
+  });
+}
 
-/* 表單送出與刷新 */
+/* ===== 送出 ===== */
 $("#entryForm").addEventListener("submit",async e=>{
-  e.preventDefault();const msg=$("#msg");msg.textContent="送出中…";
+  e.preventDefault();
+  const msg=$("#msg");msg.textContent="送出中…";
   const dVal=$("#dateInput").value;if(!dVal){msg.textContent="請選日期";return;}
-  const d=new Date(dVal),itemBase=$("#itemInput").value.trim(),cost=parseFloat($("#costInput").value);
-  const payer=$("#payerSelect").value,debtor=$("#debtorSelect").value,splitType=$("#splitSelect").value;
-  if(!payer||!debtor){msg.textContent="請選擇付錢人與欠錢人";return;}
-  if(cost<=0){msg.textContent="請輸入正確金額";return;}
-  const isBoth=debtor==="兩個都",others=isBoth?members.filter(x=>x!==payer):[];
-  if(isBoth){
-    if(splitType==="不用分"){alert("兩個都不能選不用分");msg.textContent="請修正";return;}
-    if(splitType==="不要均分"){
-      const a=parseFloat($("#person1Amount").value||0),b=parseFloat($("#person2Amount").value||0);
-      if(Math.abs(a+b-cost)>0.009){alert("兩金額相加須等於總金額");msg.textContent="金額不相等";return;}
-    }
-  }
+  const d=new Date(dVal);
+  const itemBase=$("#itemInput").value.trim();
+  const cost=parseFloat($("#costInput").value);
+  const payer=$("#payerSelect").value;
+  const checked=getCheckedDebtors();
+  const splitType=$("#splitSelect").value;
+
+  if(!payer){msg.textContent="請選擇付錢仔";return;}
+  if(checked.length===0){msg.textContent="請勾選欠錢仔";return;}
+  if(!(cost>0)){msg.textContent="請輸入正確金額";return;}
+
   const mkFD=()=>{const fd=new FormData();fd.append(FORM_FIELDS.dateYear,d.getFullYear());fd.append(FORM_FIELDS.dateMonth,d.getMonth()+1);fd.append(FORM_FIELDS.dateDay,d.getDate());return fd;};
+  const post=(item,amt,debtor,type)=>{
+    const fd=mkFD();
+    fd.append(FORM_FIELDS.item,item);
+    fd.append(FORM_FIELDS.cost,amt);
+    fd.append(FORM_FIELDS.payer,payer);
+    fd.append(FORM_FIELDS.debtor,debtor);
+    fd.append(FORM_FIELDS.splitType,type);
+    return fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd});
+  };
+
   const posts=[];
   try{
-    if(isBoth){
+    if(checked.length===1){
+      // 一個人 → 不用分，欠全額
+      posts.push(post(itemBase,cost,checked[0],"不用分"));
+    }else{
       const item=itemBase+" (SPLIT)";
       if(splitType==="均分"){
-        const half=cost/2;
-        others.forEach(n=>{const fd=mkFD();fd.append(FORM_FIELDS.item,item);fd.append(FORM_FIELDS.cost,half);fd.append(FORM_FIELDS.payer,payer);fd.append(FORM_FIELDS.debtor,n);fd.append(FORM_FIELDS.splitType,"均分");posts.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));});
-      }else{
-        const a=parseFloat($("#person1Amount").value||0),b=parseFloat($("#person2Amount").value||0);
-        [a,b].forEach((amt,i)=>{const fd=mkFD();fd.append(FORM_FIELDS.item,item);fd.append(FORM_FIELDS.cost,amt);fd.append(FORM_FIELDS.payer,payer);fd.append(FORM_FIELDS.debtor,others[i]);fd.append(FORM_FIELDS.splitType,"不要均分");posts.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));});
+        const share=cost/checked.length;
+        checked.forEach(n=>posts.push(post(item,share.toFixed(2),n,"均分")));
+      }else{ // 不要均分
+        const amts=checked.map(n=>({n,v:parseFloat(document.querySelector(`#amountFields input[data-person="${n}"]`).value||0)}));
+        const sum=amts.reduce((a,b)=>a+b.v,0);
+        if(Math.abs(sum-cost)>0.009){alert("各人金額相加必須等於總金額");msg.textContent="金額不相等";return;}
+        amts.forEach(o=>posts.push(post(item,o.v,o.n,"不要均分")));
       }
-    }else{
-      const fd=mkFD();fd.append(FORM_FIELDS.item,itemBase);fd.append(FORM_FIELDS.cost,cost);fd.append(FORM_FIELDS.payer,payer);fd.append(FORM_FIELDS.debtor,debtor);fd.append(FORM_FIELDS.splitType,"不用分");posts.push(fetch(GOOGLE_FORM_ACTION,{method:"POST",mode:"no-cors",body:fd}));
     }
-    await Promise.all(posts);msg.textContent="✅ 已新增！";$("#entryForm").reset();$("#splitAmounts").classList.add("hidden");
-    setTimeout(()=>msg.textContent="",1500);await refresh();
+    await Promise.all(posts);
+    msg.textContent="✅ 已新增！";
+    $("#entryForm").reset();
+    $("#debtorChecks").innerHTML='<span class="hint">請先選擇付錢仔</span>';
+    $("#splitAmounts").classList.add("hidden");
+    $("#splitSelect").disabled=true;$("#splitSelect").value="不用分";
+    const t=new Date();$("#dateInput").value=t.toISOString().split('T')[0];
+    setTimeout(()=>msg.textContent="",1500);
+    await refresh();
   }catch(e){console.error(e);msg.textContent="❌ 送出失敗";}
 });
 
+/* ===== 紀錄表 ===== */
 async function refresh(){
   try{
     const res=await fetch(BASE_CSV_URL+"&cb="+Date.now());
-    const text=await res.text();
-    const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
-    const data=rows.slice(3).reverse(),tbody=$("#dataTable tbody");
-    tbody.innerHTML="";
-    data.forEach(r=>{
+    const rows=parseCSV(await res.text());
+    const tbody=$("#dataTable tbody");tbody.innerHTML="";
+    // 只取真正的資料列：有金額(D)又有付錢仔(E)，會自動跳過上面的彙總列
+    const data=rows.filter(r=>!isNaN(num(r[3])) && (r[4]||'').trim()!=='');
+    data.reverse().forEach(r=>{
       const tr=document.createElement("tr");
       tr.innerHTML=`<td>${r[1]||''}</td><td>${r[2]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td><td>${r[6]||''}</td><td class="right">${r[3]||''}</td>`;
       tbody.appendChild(tr);
