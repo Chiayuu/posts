@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sport Pet Resort — Web Prototype</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
+        <div>
+          <div class="brand-title">Sport Pet Resort</div>
+          <div class="brand-subtitle" data-i18n="prototype">Web Prototype</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="resource-pill"><span>🪙</span><strong id="coins">320</strong></div>
+        <div class="resource-pill"><span>🥩</span><strong id="protein">42</strong></div>
+        <button class="ghost-btn" id="langToggle">EN</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="homeScreen">
+        <div class="scene-card">
+          <div class="scene-sun"></div>
+          <div class="window"><div class="window-line v"></div><div class="window-line h"></div></div>
+          <div class="plant"><div class="leaf l1"></div><div class="leaf l2"></div><div class="leaf l3"></div><div class="pot"></div></div>
+          <div class="rug"></div>
+          <div class="sofa" id="sofa">
+            <div class="sofa-back"></div>
+            <div class="sofa-seat"></div>
+            <div class="sofa-arm left"></div>
+            <div class="sofa-arm right"></div>
+            <div class="damage-mark" id="damageMark">〽</div>
+          </div>
+          <div class="avatar" id="avatar">
+            <div class="hair"></div>
+            <div class="head"><span class="eye left-eye"></span><span class="eye right-eye"></span><span class="mouth"></span></div>
+            <div class="body"></div>
+            <div class="leg leg1"></div><div class="leg leg2"></div>
+          </div>
+          <div class="dog" id="dog">
+            <div class="tail"></div>
+            <div class="dog-body"></div>
+            <div class="dog-head"><div class="ear e1"></div><div class="ear e2"></div><div class="dog-eye de1"></div><div class="dog-eye de2"></div><div class="dog-nose"></div></div>
+          </div>
+          <div class="room-label"><span data-i18n="floor1">1F Apartment</span></div>
+        </div>
+
+        <div class="grid two-col">
+          <article class="panel pet-panel">
+            <div class="panel-head">
+              <div><span class="eyebrow" data-i18n="yourPet">Your Pet</span><h2>Google</h2></div>
+              <div class="mood-badge" id="moodBadge">😊 Happy</div>
+            </div>
+            <div class="stat-row"><span data-i18n="hunger">Hunger</span><div class="meter"><span id="hungerBar" style="width:72%"></span></div><strong id="hungerValue">72%</strong></div>
+            <div class="stat-row"><span data-i18n="energy">Energy</span><div class="meter"><span id="energyBar" style="width:81%"></span></div><strong id="energyValue">81%</strong></div>
+            <div class="stat-row"><span data-i18n="exerciseNeed">Exercise</span><div class="meter warm"><span id="exerciseBar" style="width:45%"></span></div><strong id="exerciseValue">45%</strong></div>
+            <div class="stat-row"><span data-i18n="bond">Bond</span><div class="meter pink"><span id="bondBar" style="width:60%"></span></div><strong id="bondValue">60%</strong></div>
+            <div class="button-row">
+              <button class="primary-btn" id="feedBtn">🍽️ <span data-i18n="feed">Feed</span></button>
+              <button class="secondary-btn" id="playBtn">🧸 <span data-i18n="play">Play</span></button>
+            </div>
+          </article>
+
+          <article class="panel wellness-panel">
+            <div class="panel-head"><div><span class="eyebrow" data-i18n="today">Today</span><h2 data-i18n="wellness">Wellness</h2></div><span class="mini-icon">🌿</span></div>
+            <div class="wellness-grid">
+              <div class="wellness-card"><span class="big-icon">😴</span><strong id="sleepHours">7.2 h</strong><small data-i18n="sleep">Sleep</small></div>
+              <div class="wellness-card"><span class="big-icon">🏃‍♀️</span><strong id="exerciseHours">1.0 h</strong><small data-i18n="exercise">Exercise</small></div>
+              <div class="wellness-card"><span class="big-icon">👣</span><strong id="steps">6,240</strong><small data-i18n="steps">Steps</small></div>
+            </div>
+            <button class="health-btn" id="syncBtn"> <span data-i18n="syncHealth">Simulate Apple Health Sync</span></button>
+            <div class="rule-note" id="ruleNote" data-i18n="ruleNote">Sleep 8h earns a daily bonus. Exercise rewards diminish after 4h and stop after 20h.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="screen" id="workoutScreen">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="workout">Workout</span><h1 data-i18n="moveEarn">Move & Earn</h1></div><button class="primary-btn" id="simulateWorkoutBtn">＋ <span data-i18n="simulateWorkout">Simulate Workout</span></button></div>
+        <div class="panel reward-card">
+          <div class="reward-scale">
+            <div class="reward-zone z1"><strong>0–4h</strong><span>100%</span></div>
+            <div class="reward-zone z2"><strong>4–8h</strong><span>50%</span></div>
+            <div class="reward-zone z3"><strong>8–12h</strong><span>25%</span></div>
+            <div class="reward-zone z4"><strong>12–20h</strong><span>10%</span></div>
+            <div class="reward-zone z5"><strong>&gt;20h</strong><span>0%</span></div>
+          </div>
+          <p data-i18n="rewardExplanation">Workout rewards are calculated from validated duration. Long sessions are still recorded, but game rewards taper after 4 hours and stop after 20 hours.</p>
+        </div>
+        <div class="history" id="workoutHistory"></div>
+      </section>
+
+      <section class="screen" id="petScreen">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="pet">Pet</span><h1>Google</h1></div><span class="status-tag" id="petStatusTag">Happy</span></div>
+        <div class="grid two-col">
+          <article class="panel big-pet-card">
+            <div class="pet-portrait">🐕</div>
+            <h2>Golden Retriever</h2>
+            <p data-i18n="petTip">Keep exercise need under control to prevent furniture mischief.</p>
+          </article>
+          <article class="panel">
+            <h2 data-i18n="dailyActions">Daily Actions</h2>
+            <div class="stack-actions">
+              <button class="primary-btn wide" id="petFeedBtn">🍽️ <span data-i18n="feed">Feed</span> · 4 🥩</button>
+              <button class="secondary-btn wide" id="petExerciseBtn">🦮 <span data-i18n="walkTogether">Walk Together</span></button>
+              <button class="secondary-btn wide" id="mischiefBtn">💥 <span data-i18n="simulateMischief">Simulate Mischief</span></button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="screen" id="resortScreen">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="resort">Resort</span><h1 data-i18n="buildYourSpace">Build Your Space</h1></div><span class="status-tag">1F / 2F</span></div>
+        <div class="shop-grid">
+          <article class="shop-card"><div class="shop-art sofa-art">🛋️</div><h3 data-i18n="cozySofa">Cozy Sofa</h3><p>120 🪙</p><button class="secondary-btn buy-btn" data-item="sofa" data-price="120" data-i18n="buy">Buy</button></article>
+          <article class="shop-card"><div class="shop-art">🪴</div><h3 data-i18n="plantCorner">Plant Corner</h3><p>80 🪙</p><button class="secondary-btn buy-btn" data-item="plant" data-price="80" data-i18n="buy">Buy</button></article>
+          <article class="shop-card"><div class="shop-art">🏋️</div><h3 data-i18n="gymUpgrade">Gym Upgrade</h3><p>220 🪙</p><button class="secondary-btn buy-btn" data-item="gym" data-price="220" data-i18n="buy">Buy</button></article>
+          <article class="shop-card"><div class="shop-art">🧸</div><h3 data-i18n="petToy">Pet Toy</h3><p>60 🪙</p><button class="secondary-btn buy-btn" data-item="toy" data-price="60" data-i18n="buy">Buy</button></article>
+        </div>
+        <div class="panel inventory-panel"><h2 data-i18n="inventory">Inventory</h2><div id="inventory" class="inventory"></div></div>
+      </section>
+
+      <section class="screen" id="profileScreen">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="profile">Profile</span><h1 data-i18n="avatarWardrobe">Avatar & Wardrobe</h1></div></div>
+        <div class="grid two-col">
+          <article class="panel avatar-preview-card"><div class="avatar-preview">👩🏻‍🦰</div><h2 data-i18n="homeOutfit">Home Outfit</h2><p data-i18n="outfitDesc">A simple preview for the web prototype. The iOS version will use layered 2D assets.</p></article>
+          <article class="panel"><h2 data-i18n="accessories">Accessories</h2><div class="chips"><button class="chip">🧢 Cap</button><button class="chip">👓 Glasses</button><button class="chip">🧣 Scarf</button><button class="chip">⌚ Watch</button></div></article>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-target="homeScreen"><span>🏠</span><small data-i18n="home">Home</small></button>
+      <button class="nav-btn" data-target="workoutScreen"><span>🏃</span><small data-i18n="workout">Workout</small></button>
+      <button class="nav-btn" data-target="petScreen"><span>🐾</span><small data-i18n="pet">Pet</small></button>
+      <button class="nav-btn" data-target="resortScreen"><span>🏢</span><small data-i18n="resort">Resort</small></button>
+      <button class="nav-btn" data-target="profileScreen"><span>👤</span><small data-i18n="profile">Profile</small></button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
